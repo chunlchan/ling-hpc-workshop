@@ -19,7 +19,6 @@ Cluster-specific values (account, partition, module version, corpus path) are pl
 | [`AGENT_PROMPT.md`](AGENT_PROMPT.md) | The prompt students paste into the agent. They fill in three values: corpus path, partition, account |
 | [`INSTRUCTOR_GUIDE.md`](INSTRUCTOR_GUIDE.md) | Answer sheet (expected numbers) and troubleshooting for common failures |
 | [`reference/`](reference/) | Tested serial script and SLURM script, to use as a fallback if a student's agent-written version fails. Also a parallel (multiprocessing) version for future use, with a student README |
-| [`guard/`](guard/) | A small script that makes stand-in `sbatch`, `srun` and `salloc` commands, so the agent cannot submit jobs for the students. See the instructor guide |
 | [`corpus_prep/`](corpus_prep/) | Scripts and the book list used to build the corpus |
 | [`docs/`](docs/) | The workshop slide deck: a single HTML page, published with GitHub Pages at <https://chunlchan.github.io/ling-hpc-workshop/> (short link: <https://go.iu.edu/yPx3ED>) |
 | [`archive/PLAN.md`](archive/PLAN.md) | The original design notes, kept for reference (partly out of date) |

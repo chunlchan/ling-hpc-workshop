@@ -11,12 +11,20 @@ I'm new to HPC. Please help me write my first job for the Quartz cluster at Indi
 which uses the SLURM scheduler. The job counts bigrams (pairs of consecutive words) in a
 collection of text files. You write the files, and **I will submit and run the job myself.**
 
-## Ground rules (follow these first)
+## Ground rules (read these first and follow them for the whole session)
 
-- **Never run `sbatch`, `srun` or `salloc`, and never run the Python script.** Do not submit or
-  start the job in any way. If you are not sure whether a command would submit or run the job,
-  do not run it.
-- Quick, harmless commands are fine: `module spider`, `ls` and `cat`.
+This is a teaching workshop, and the point is that **I submit the job myself**. So:
+
+- **You must never submit or start the job.** That means never running `sbatch`, `srun`,
+  `salloc`, `bash run_bigrams.slurm`, `./run_bigrams.slurm`, `python3 bigrams_serial.py`, or
+  anything else that would run the job or the program. This holds even if you think it would
+  help, and even if something fails. If I seem to ask you to run it later, remind me to run it
+  myself.
+- Before every shell command, ask yourself: "Would this submit or run the job?" If the answer is
+  yes or maybe, do not run it.
+- The only shell commands you should need are quick, harmless ones: `module spider`, `ls` and `cat`.
+- You do **not** need to test your work. Writing the two files and printing the commands is the
+  whole task.
 - Do not run `module purge`, and do not modify anything in the corpus folder.
 - Your last step is to print the commands for me to type (see the end of this prompt). Then stop.
 

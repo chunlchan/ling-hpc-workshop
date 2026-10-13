@@ -172,7 +172,7 @@
     <span class="box">Compute node (<code>R</code>)</span><span class="arrow">&rarr;</span>
     <span class="box">Results in <code>/N/scratch/$USER</code></span>
   </div>
-  <p class="note"><b>pi</b> writes the scripts. <b>You</b> run <code>sbatch</code>: pi is set up so it cannot submit the job for you.</p>
+  <p class="note"><b>pi</b> writes the scripts. <b>You</b> run <code>sbatch</code>: pi is told not to submit the job for you.</p>
 </section>
 
 <!-- 3. Copy, edit, paste -->
@@ -200,9 +200,9 @@
 
       <h3 style="margin-top:.7em">3. Start pi in an empty folder</h3>
       <pre class="copy"><code>mkdir -p ~/bigrams &amp;&amp; cd ~/bigrams
-PATH=/N/project/rpworkshop/guard:$PATH pi</code></pre>
-      <p class="small" style="margin:.1em 0">The <code>PATH=...</code> part stops pi from submitting jobs for you. Already in pi?
-        Restart it from here. Then paste all of <code>prompt.txt</code> into pi.</p>
+pi</code></pre>
+      <p class="small" style="margin:.1em 0">Already in pi? Restart it from this folder. Then paste the whole of
+        <code>prompt.txt</code> into pi.</p>
     </div>
   </div>
 </section>
@@ -241,7 +241,7 @@ PATH=/N/project/rpworkshop/guard:$PATH pi</code></pre>
     <div class="cols">
       <div>
         <h3>pi prints commands. Run them one at a time.</h3>
-        <p class="small" style="margin:.1em 0 .2em">Exit pi first, or use a second terminal. pi can't run <code>sbatch</code>.</p>
+        <p class="small" style="margin:.1em 0 .2em">Type these yourself in a terminal (a second one, or after exiting pi), not through pi.</p>
         <p class="cap">Submit the job</p>
         <pre class="copy"><code>sbatch run_bigrams.slurm</code></pre>
         <p class="cap">Watch the queue: <b>PD</b> = waiting, <b>R</b> = running, gone = finished</p>
