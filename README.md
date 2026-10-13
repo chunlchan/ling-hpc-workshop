@@ -46,10 +46,10 @@ large files it takes about 30 seconds, consistently. One document per line keeps
 boundaries, so a program that counts bigrams line by line gets exactly the same counts either
 way (19,500,939 bigrams, 5,306,726 distinct).
 
-**Download the prebuilt corpus** (about 42 MB) from the Releases page of this repository:
+**Download the prebuilt corpus** (about 40 MB) from the Releases page of this repository:
 
 ```
-wget <RELEASE_URL>/prepared_4k_concat.zip
+wget https://github.com/chunlchan/ling-hpc-workshop/releases/download/2026-10-12_01/prepared_4k_concat.zip
 unzip prepared_4k_concat.zip
 ```
 
