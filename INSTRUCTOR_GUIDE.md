@@ -105,12 +105,30 @@ If a student's agent produces something that won't work, give them our tested fi
 `--partition`, `module load` and `CORPUS_DIR` placeholders in `run_serial.slurm` first. These write `bigram_counts_serial.tsv` and
 `serial_<jobid>.out` to `/N/scratch/$USER/` (different file names from the agent's version).
 
+## One-time setup: the guard folder
+
+The slides start pi with `PATH=/N/project/rpworkshop/guard:$PATH pi`. That folder holds stand-in
+`sbatch`, `srun` and `salloc` commands that print "BLOCKED" and fail, so pi cannot submit a job even
+if it ignores the prompt. Only the pi session is affected. After students leave pi (or in a second
+terminal) the real `sbatch` works as normal. Create the folder once, on the cluster:
+
+```
+git clone https://github.com/chunlchan/ling-hpc-workshop.git     # or copy guard/make_guard.sh over
+sh ling-hpc-workshop/guard/make_guard.sh /N/project/rpworkshop/guard
+ls -l /N/project/rpworkshop/guard                                  # three small files, readable by everyone
+```
+
+Check that it works: `PATH=/N/project/rpworkshop/guard:$PATH sbatch x` should print `BLOCKED`. If the
+folder is missing or unreadable for a student, `pi` still starts (it just isn't guarded), and the
+prompt's rules are the only protection.
+
 ## Checklist before the workshop
 
 - [ ] Run the prompt in the agent students will use, at least 3 times, from empty folders. Check
       the generated `.slurm` and `.py` files each time.
 - [ ] In that agent, confirm `module spider python` works (the `module` command is a shell
       function, and some agent tools don't have it set up).
+- [ ] Create the guard folder (see "One-time setup") and check that students can read it.
 - [ ] Confirm the account works on both `general` and `debug`.
 - [ ] Confirm the corpus folder is readable by a participant (not just you).
 - [ ] Confirm `/N/scratch/$USER` exists for participants.
@@ -189,7 +207,8 @@ Run `sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS,ExitCode`.
 
 | Symptom | Fix |
 |---|---|
-| The agent ran `sbatch` or the Python script itself | Not harmful, but tell the student to re-run with the rule restated; check no duplicate jobs with `squeue --me` and `scancel` extras |
+| pi says `sbatch` is **BLOCKED** | Expected: the guard folder is doing its job | The student runs `sbatch` themselves, after exiting pi or in a second terminal |
+| The agent submitted the job or ran the Python script itself anyway | The student didn't start pi with the guard `PATH=...` prefix, the guard folder is missing or unreadable, or the agent used a full path such as `/usr/bin/sbatch` | Not harmful. Check for duplicate jobs with `squeue --me` and `scancel` extras. Restart pi with the guard prefix, or restate the rule |
 | The agent made a parallel (multiprocessing) version | Ask it to redo it as a single-process program, or use the reference `bigrams_serial.py` |
 | The agent invented a module version or paths | Remind it to run `module spider python`, or use the reference scripts |
 | The agent finished without printing the commands | Ask it to print the commands to type, step by step |

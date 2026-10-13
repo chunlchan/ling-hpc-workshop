@@ -7,9 +7,18 @@ cluster. (If you aren't sure about the account, ask an instructor.)
 
 ---
 
-I'm new to HPC. Please help me write and submit my first job on the Quartz cluster at Indiana
-University, which uses the SLURM scheduler. The job counts bigrams (pairs of consecutive words)
-in a collection of text files.
+I'm new to HPC. Please help me write my first job for the Quartz cluster at Indiana University,
+which uses the SLURM scheduler. The job counts bigrams (pairs of consecutive words) in a
+collection of text files. You write the files, and **I will submit and run the job myself.**
+
+## Ground rules (follow these first)
+
+- **Never run `sbatch`, `srun` or `salloc`, and never run the Python script.** Do not submit or
+  start the job in any way. If you are not sure whether a command would submit or run the job,
+  do not run it.
+- Quick, harmless commands are fine: `module spider`, `ls` and `cat`.
+- Do not run `module purge`, and do not modify anything in the corpus folder.
+- Your last step is to print the commands for me to type (see the end of this prompt). Then stop.
 
 ## My settings
 
@@ -75,19 +84,13 @@ Save **all outputs** directly in my scratch folder, `/N/scratch/$USER/`, which a
 
 The two scripts themselves stay in my current directory.
 
-## Important rules
-
-- **Do not run the Python script, and do not run `sbatch`.** I want to submit the job myself.
-  Don't run any heavy computation on this login machine.
-- It is fine to run quick, harmless commands such as `module spider`, `ls`, and `cat`.
-- Do not run `module purge`, and do not modify anything in the corpus folder.
-
 ## When you're done
 
-Print the exact commands I should type, in order, each with a one- or two-sentence explanation
-in plain language:
+**Print, but do not run,** the exact commands I should type, in order, each with a one- or
+two-sentence explanation in plain language:
 
-1. Submit the job with `sbatch`.
-2. Check on it with `squeue --me`.
-3. Read the results once it finishes (with `ls /N/scratch/$USER`, then `cat` on the `.out` file
-   there).
+1. Submit the job: `sbatch run_bigrams.slurm`
+2. Check on it: `squeue --me`
+3. Read the results once it finishes: `ls /N/scratch/$USER`, then `cat` the `.out` file there.
+
+Then stop. I will run these commands myself.
