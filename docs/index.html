@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Your First Cluster Job</title>
+<meta name="description" content="Workshop slides: have the pi coding agent write your first HPC job, then submit it yourself.">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+
+<style>
+  :root {
+    --crimson: #990000;
+    --crimson-dark: #660000;
+    --cream: #eeedeb;
+    --ink: #1f1f1f;
+    --muted: #555555;
+    --green: #2e7d32;
+    --code-bg: #1e1e1e;
+    --code-fg: #f4f4f4;
+
+    --r-background-color: #eeedeb;
+    --r-main-color: #1f1f1f;
+    --r-main-font-size: 28px;
+    --r-heading-color: #990000;
+    --r-heading-text-transform: none;
+    --r-heading-font-weight: 700;
+    --r-link-color: #990000;
+    --r-link-color-hover: #660000;
+  }
+
+  html, body { background: var(--cream); }
+  .reveal .slides { text-align: left; }
+  .reveal .slides section { padding-top: .6em; }
+  .reveal h1 { font-size: 1.9em; margin-bottom: .15em; }
+  .reveal h2 { font-size: 1.45em; margin-bottom: .45em; }
+  .reveal h3 { font-size: 1em; color: var(--ink); margin: 0 0 .3em; }
+  .reveal p, .reveal li { line-height: 1.35; }
+  .reveal ul, .reveal ol { margin: .3em 0 .3em 1em; display: block; }
+  .reveal li { margin: .25em 0; }
+  .reveal code, .reveal pre, .bg, .sentence, .check, button.chip {
+    font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0;
+  }
+  .reveal code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+
+  .sub { font-size: 1.05em; color: var(--muted); margin: 0 0 .9em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; align-items: start; }
+  .card { background: #fff; border-radius: 10px; padding: .7em .9em; border-left: 6px solid var(--crimson); }
+  .small { font-size: .78em; color: var(--muted); }
+  .note { font-size: .8em; color: var(--muted); margin-top: .6em; }
+
+  /* bigram example */
+  .sentence { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .95em;
+              background: #fff; border-radius: 8px; padding: .4em .7em; display: inline-block; }
+  .bigrams { display: flex; flex-wrap: wrap; gap: .35em .45em; margin: .5em 0; }
+  .bg { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82em; background: #fff;
+        border: 2px solid #c9c7c3; border-radius: 6px; padding: .1em .5em; }
+  .bg.hot { border-color: var(--crimson); color: var(--crimson); font-weight: 700; }
+
+  /* workflow */
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: .7em 1em; margin: .4em 0 .7em; }
+  .step { background: #fff; border-radius: 10px; padding: .55em .8em; display: flex; gap: .7em; align-items: flex-start; }
+  .step .n { flex: none; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--crimson); color: #fff;
+             font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step b { display: block; }
+  .step span { font-size: .8em; color: var(--muted); }
+  .flow { font-size: .85em; display: flex; flex-wrap: wrap; align-items: center; gap: .4em; }
+  .flow .box { background: #fff; border: 2px solid var(--crimson); border-radius: 8px; padding: .15em .6em; }
+  .flow .arrow { color: var(--crimson); font-weight: 700; }
+
+  /* code blocks with copy buttons */
+  .reveal pre.copy { position: relative; width: 100%; margin: .4em 0; box-shadow: none;
+                     background: var(--code-bg); color: var(--code-fg); border-radius: 8px; font-size: .6em; }
+  .reveal pre.copy code { display: block; padding: .75em 5.2em .75em .9em; max-height: none; overflow: visible;
+                          background: none; color: inherit; white-space: pre-wrap; word-break: break-all; line-height: 1.45; }
+  .copybtn { position: absolute; top: .45em; right: .5em; font: inherit; font-size: .85em; padding: .15em .7em;
+             border-radius: 6px; border: 1px solid #8a8a8a; background: #3a3a3a; color: #fff; cursor: pointer; }
+  .copybtn:hover { background: #555; }
+  .copybtn.done { background: var(--green); border-color: var(--green); }
+
+  /* click-to-copy value chips */
+  table.vals { border-collapse: separate; border-spacing: 0 .35em; width: 100%; font-size: .85em; }
+  table.vals td { padding: 0 .5em 0 0; vertical-align: middle; border: 0; }
+  table.vals td:first-child { white-space: nowrap; }
+  button.chip { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8em; background: #fff; color: var(--crimson);
+                border: 2px solid var(--crimson); border-radius: 8px; padding: .12em .6em; cursor: pointer; text-align: left; }
+  button.chip::after { content: "  copy"; font-family: inherit; font-size: .72em; color: var(--muted); }
+  button.chip.done { border-color: var(--green); color: var(--green); }
+  button.chip.done::after { content: "  copied!"; color: var(--green); }
+
+  button.chip.long { font-size: .66em; }
+  .reminder { background: #fff; border-left: 6px solid var(--crimson); border-radius: 8px; padding: .35em .7em;
+              font-size: .82em; margin: .5em 0 0; }
+
+  a.button { display: inline-block; background: var(--crimson); color: #fff !important; text-decoration: none;
+             border-radius: 8px; padding: .25em .8em; font-weight: 700; font-size: .9em; }
+  a.button:hover { background: var(--crimson-dark); }
+
+  .check { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .62em; background: #fff; border-radius: 8px;
+           padding: .6em .9em; border-left: 6px solid var(--green); line-height: 1.55; white-space: pre; }
+
+  .footer { position: fixed; left: 1.2em; bottom: .6em; font-size: 20px; font-weight: 600; z-index: 30; }
+  .footer a { color: var(--crimson); text-decoration: none; }
+  .footer .alt { font-size: 15px; font-weight: 400; color: var(--muted); margin-left: .9em; }
+  noscript p { background: #fff; padding: 1em; margin: 1em; border-left: 6px solid var(--crimson); }
+</style>
+</head>
+
+<body>
+<noscript><p>This page needs JavaScript. The prompt is here:
+<a href="https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md">AGENT_PROMPT.md</a>.</p></noscript>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- 1. The task -->
+<section>
+  <h1>Counting bigrams on a cluster</h1>
+  <p class="sub">Your first HPC job: written by an AI agent (pi), submitted by you</p>
+
+  <div class="cols">
+    <div>
+      <h3>What is a bigram?</h3>
+      <p style="margin:.2em 0 .5em">A pair of consecutive words.</p>
+      <div class="sentence">the cat sat on the mat and the cat slept</div>
+      <div class="bigrams">
+        <span class="bg hot">the cat &times;2</span>
+        <span class="bg">cat sat</span>
+        <span class="bg">sat on</span>
+        <span class="bg">on the</span>
+        <span class="bg">the mat</span>
+        <span class="bg">mat and</span>
+        <span class="bg">and the</span>
+        <span class="bg">cat slept</span>
+      </div>
+      <p class="small">10 words &rarr; 9 bigrams (8 distinct)</p>
+    </div>
+
+    <div class="card">
+      <h3>What your job does</h3>
+      <ul>
+        <li>Reads <b>3,999 passages</b> (about 5,000 words each) from Project Gutenberg books: <b>19.5 million words</b></li>
+        <li>Counts the word pairs inside each passage and adds them up</li>
+        <li>Prints the <b>top 20</b> bigrams and saves the top 1,000 to a file</li>
+      </ul>
+      <p class="note">The linguistics is simple on purpose. The point is the workflow: request resources, submit, wait, read results.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. The workflow -->
+<section>
+  <h2>The workflow</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><b>Get the prompt</b><span>Save it as <code>prompt.txt</code></span></div></div>
+    <div class="step"><div class="n">2</div><div><b>Edit the prompt</b><span>Fill in three values (path, partition, account) and delete the header</span></div></div>
+    <div class="step"><div class="n">3</div><div><b>Give it to pi</b><span>It writes a Python program and a batch script, then prints the commands to run</span></div></div>
+    <div class="step"><div class="n">4</div><div><b>You submit the job</b><span>Run the commands, watch the queue, read the results</span></div></div>
+  </div>
+
+  <h3>What happens when you submit</h3>
+  <div class="flow">
+    <span class="box">You: <code>sbatch</code></span><span class="arrow">&rarr;</span>
+    <span class="box">Queue (<code>PD</code>)</span><span class="arrow">&rarr;</span>
+    <span class="box">Compute node (<code>R</code>)</span><span class="arrow">&rarr;</span>
+    <span class="box">Results in <code>/N/scratch/$USER</code></span>
+  </div>
+  <p class="note"><b>pi</b> writes the scripts. <b>You</b> run <code>sbatch</code>: it will not submit the job for you.</p>
+</section>
+
+<!-- 3. Copy, edit, paste -->
+<section>
+  <h2>Get the prompt, edit it, give it to pi</h2>
+  <div class="cols">
+    <div>
+      <h3>1. Save the prompt</h3>
+      <p style="margin:.1em 0 .4em">In Firefox on the Research Desktop:
+        <a class="button" href="https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md" target="_blank" rel="noopener">Open the prompt &#8599;</a></p>
+      <p class="small" style="margin:.1em 0 .5em">Press <b>Ctrl+S</b> and save it as <code>prompt.txt</code> anywhere you'll remember. Or, in a terminal:</p>
+      <pre class="copy"><code>wget -O prompt.txt https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md</code></pre>
+    </div>
+
+    <div>
+      <h3>2. Edit <code>prompt.txt</code></h3>
+      <p class="small" style="margin:.1em 0 .3em">Replace each <code>&lt;...&gt;</code> <b>including the angle brackets</b>. Click a value to copy it.</p>
+      <table class="vals">
+        <tr><td><code>&lt;PATH&gt;</code></td><td><button class="chip long" data-copy="/N/project/rpworkshop/corpus/prepared_4k_concat/">/N/project/rpworkshop/corpus/prepared_4k_concat/</button></td></tr>
+        <tr><td><code>&lt;PARTITION&gt;</code></td><td><button class="chip" data-copy="general">general</button> <span class="small">(or <b>debug</b> if general is busy)</span></td></tr>
+        <tr><td><code>&lt;ACCOUNT&gt;</code></td><td><button class="chip" data-copy="c02318">c02318</button> <span class="small">(or your own allocation; ask if unsure)</span></td></tr>
+      </table>
+      <p class="reminder"><b>Then delete the header:</b> everything above the <code>---</code> line at the top of
+        <code>prompt.txt</code>, plus that line. Keep the rest.</p>
+
+      <h3 style="margin-top:.7em">3. Start pi in an empty folder</h3>
+      <pre class="copy"><code>mkdir -p ~/bigrams &amp;&amp; cd ~/bigrams
+pi</code></pre>
+      <p class="small" style="margin:.1em 0">Already in pi? Restart it from this folder. Then paste the whole of
+        <code>prompt.txt</code> into pi.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Run it, check it -->
+<section>
+  <section>
+    <h2>Run it, then check your answer</h2>
+    <div class="cols">
+      <div>
+        <h3>pi prints commands like these</h3>
+        <pre class="copy"><code>sbatch run_bigrams.slurm
+squeue --me
+cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.out</code></pre>
+        <p class="small">Use the job number that <code>sbatch</code> prints in place of <code>&lt;jobid&gt;</code>.
+          In <code>squeue</code>, <b>PD</b> means waiting and <b>R</b> means running. When your job disappears, it has finished.</p>
+      </div>
+      <div>
+        <h3>Your numbers should match</h3>
+<div class="check">Documents (lines):  3,999
+Total bigrams:      19,500,939
+Distinct bigrams:   5,306,726
+Most frequent:      "of the" (177,785)
+Runtime:            about 30 s (varies)</div>
+        <p class="note">Your output layout may differ from your neighbor's. The numbers should not.</p>
+      </div>
+    </div>
+    <p class="note" style="text-align:right">Press &darr; for the fallback and troubleshooting</p>
+  </section>
+
+  <section>
+    <h2>If the corpus path doesn't work</h2>
+    <p style="margin:.1em 0 .3em">Permission denied, folder not found, or very slow? Download your own copy:</p>
+    <pre class="copy"><code>mkdir -p ~/ling_corpus &amp;&amp; cd ~/ling_corpus
+wget https://github.com/chunlchan/ling-hpc-workshop/releases/download/2026-10-12_01/prepared_4k_concat.zip
+unzip prepared_4k_concat.zip
+ls prepared_4k_concat | wc -l
+echo $PWD/prepared_4k_concat</code></pre>
+    <ul class="small" style="font-size:.8em">
+      <li>The <code>wc -l</code> line should print <b>40</b>.</li>
+      <li>The last line prints the path to use. Put it in place of <code>&lt;PATH&gt;</code>, then start again in a new empty folder.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Stuck?</h2>
+    <ul>
+      <li><b>Job stays on <code>PD</code> a long time:</b> the cluster is busy. Ask about the <code>debug</code> partition.</li>
+      <li><b><code>Found 0 documents</code> or "no .txt files found":</b> the corpus path is wrong. Check it with <code>ls</code>.</li>
+      <li><b><code>python: command not found</code>:</b> the batch script needs a <code>module load python/...</code> line. Ask pi to fix it.</li>
+      <li><b>Anything else:</b> read the <code>.err</code> file in <code>/N/scratch/$USER</code>, or ask an instructor.</li>
+    </ul>
+  </section>
+</section>
+
+</div>
+</div>
+
+<div class="footer"><a href="https://go.iu.edu/yPx3ED">go.iu.edu/yPx3ED</a><span class="alt">or chunlchan.github.io/ling-hpc-workshop</span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+    center: false,
+    controls: true,
+    progress: true,
+    slideNumber: 'c/t',
+    transition: 'none'
+  });
+
+  // Copy to clipboard, with a fallback for browsers that block the async API
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(); } catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+
+  function flash(el, doneText, failText, ok) {
+    var original = el.textContent;
+    el.classList.toggle('done', ok);
+    if (el.classList.contains('copybtn')) { el.textContent = ok ? doneText : failText; }
+    setTimeout(function () {
+      el.classList.remove('done');
+      if (el.classList.contains('copybtn')) { el.textContent = original; }
+    }, 1600);
+  }
+
+  // Copy buttons on code blocks
+  document.querySelectorAll('pre.copy').forEach(function (pre) {
+    var btn = document.createElement('button');
+    btn.className = 'copybtn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function () {
+      var text = pre.querySelector('code').innerText.replace(/\n+$/, '');
+      copyText(text).then(
+        function () { flash(btn, 'Copied!', '', true); },
+        function () { flash(btn, '', 'Select + Ctrl+C', false); }
+      );
+    });
+    pre.appendChild(btn);
+  });
+
+  // Click-to-copy value chips
+  document.querySelectorAll('button.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      copyText(chip.getAttribute('data-copy')).then(
+        function () { flash(chip, '', '', true); },
+        function () { /* leave as is; the value is visible and can be typed */ }
+      );
+    });
+  });
+</script>
+</body>
+</html>

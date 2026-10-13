@@ -20,7 +20,8 @@ Cluster-specific values (account, partition, module version, corpus path) are pl
 | [`INSTRUCTOR_GUIDE.md`](INSTRUCTOR_GUIDE.md) | Answer sheet (expected numbers) and troubleshooting for common failures |
 | [`reference/`](reference/) | Tested serial script and SLURM script, to use as a fallback if a student's agent-written version fails. Also a parallel (multiprocessing) version for future use, with a student README |
 | [`corpus_prep/`](corpus_prep/) | Scripts and the book list used to build the corpus |
-| [`docs/PLAN.md`](docs/PLAN.md) | The original design notes (partly out of date) |
+| [`docs/`](docs/) | The workshop slide deck: a single HTML page, published with GitHub Pages at <https://chunlchan.github.io/ling-hpc-workshop/> (short link: <https://go.iu.edu/yPx3ED>) |
+| [`archive/PLAN.md`](archive/PLAN.md) | The original design notes, kept for reference (partly out of date) |
 
 ## Instructor quick start
 
@@ -29,7 +30,8 @@ Cluster-specific values (account, partition, module version, corpus path) are pl
    participants should use. Participants enter these into the prompt.
 3. **Test the prompt** in the agent your participants will use, several times, from empty
    folders. The checklist is in the instructor guide.
-4. **Run the activity.** Expected results for a correct run: 3,999 documents, 19,500,939 total
+4. **Run the activity** from the slide deck (above). Participants save the prompt as `prompt.txt`,
+   edit the three values, and give it to the agent. Expected results for a correct run: 3,999 documents, 19,500,939 total
    bigrams, 5,306,726 distinct bigrams, "of the" as the most frequent bigram (177,785).
 
 ## The corpus

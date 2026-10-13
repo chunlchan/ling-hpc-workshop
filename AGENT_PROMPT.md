@@ -1,8 +1,9 @@
 # Workshop prompt: have an agent write your first HPC job
 
-**How to use this:** copy everything below the line into your agent on the cluster. Before you
-paste it, replace the three values in the "My settings" section. (If you aren't sure about the
-account, ask an instructor.)
+**How to use this:** save this file as `prompt.txt`. Replace the three values in the "My settings"
+section (replace each `<...>` **including the angle brackets**). Then **delete this header**:
+everything above the `---` line below, and the line itself. Give the rest to your agent on the
+cluster. (If you aren't sure about the account, ask an instructor.)
 
 ---
 
