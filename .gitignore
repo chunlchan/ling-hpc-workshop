@@ -1,0 +1,18 @@
+# Corpus data: too large for the repo; distribute as a GitHub Release asset
+data/
+
+# Raw downloads and regenerable corpus output
+gutenberg_books/
+corpus/
+prepared*/
+pg_catalog.csv
+
+# Job output
+*.out
+*.err
+*.tsv
+
+# Python / OS
+__pycache__/
+*.pyc
+.DS_Store
