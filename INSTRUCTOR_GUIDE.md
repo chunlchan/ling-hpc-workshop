@@ -15,6 +15,20 @@ Two parts: an **answer sheet** (what a correct run looks like) and a **troublesh
 | Partition | `general` (or `debug` as the fallback) |
 | Account | `<ACCOUNT>` (the workshop account, or the student's own) |
 
+### IU defaults for this workshop (reminder)
+
+Values students enter into the prompt, as set up for the IU Quartz workshop:
+
+| Setting | Value |
+|---|---|
+| `<PATH>` | `/N/project/rpworkshop/corpus/prepared_4k_concat/` |
+| `<PARTITION>` | `general` (use `debug` if `general` seems especially busy) |
+| `<ACCOUNT>` | `c02318`, assuming each student was successfully added to the workshop's Quartz allocation. Some students may have their own allocations from other projects |
+
+If the project space isn't working for a student (no access, or very slow), they can download the
+corpus into their own home directory instead. See
+[Fallback: download the corpus](#fallback-download-the-corpus-to-your-home-directory) below.
+
 ## What a correct result looks like
 
 Whatever code the agent writes, these numbers must match:
@@ -148,7 +162,7 @@ cat /N/scratch/$USER/bigrams_<jobid>.err
 | `python3: can't open file '.../bigrams_serial.py'` | `sbatch` was run from a different folder than the one containing the `.py` file | `cd` to the folder with both files, or add `cd "$SLURM_SUBMIT_DIR"` to the script |
 | `ERROR: CORPUS_DIR environment variable is not set` | The `export CORPUS_DIR=...` line is missing or misspelled | Add `export CORPUS_DIR=<CORPUS_DIR>` (your corpus folder) |
 | `ERROR: no .txt files found` or `Found 0 documents` | `CORPUS_DIR` points to the wrong folder (typo, or a parent folder) | `ls <CORPUS_DIR> \| head` should list `corpus_001.txt` and so on |
-| `Permission denied` on the corpus | Folder isn't readable by that student | Instructor check of folder permissions |
+| `Permission denied` on the corpus, or the folder can't be found | The student's account isn't provisioned for the shared project space, or the path is wrong | Use the [fallback download](#fallback-download-the-corpus-to-your-home-directory) so they can continue, and check their project access afterwards |
 | `FileNotFoundError` / `Permission denied` when writing results | `OUTPUT_DIR` is not `/N/scratch/$USER`, or the folder isn't writable | Make sure `export OUTPUT_DIR=/N/scratch/$USER` is in the script |
 
 ## Problems with how the job ends
@@ -169,7 +183,7 @@ Run `sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS,ExitCode`.
 | Total bigrams too high by about 4,000 (for example 19,504,898 or 19,504,937) | The agent treated each file (or all the files together) as one text, so words were paired across line (document) boundaries | Bigrams must be counted **within each line** only. Total should be 19,500,939 |
 | Total is far too low | Only some files were read (wrong glob pattern, wrong folder) | Files must be 40 and documents (lines) 3,999 |
 | Different top bigrams | The agent changed the text (for example stripped punctuation, or lowercased) | The corpus is already lowercase plain text; split on whitespace only |
-| Runtime much slower than expected (over 2–3 minutes) | The shared filesystem is busy | Normal variation; wait and re-run, nothing is wrong |
+| Runtime much slower than expected (over 2–3 minutes) | The shared filesystem is busy | Normal variation; wait and re-run, or try the [fallback download](#fallback-download-the-corpus-to-your-home-directory) (home directories were faster in our tests) |
 
 ## Problems with the agent
 
@@ -180,6 +194,22 @@ Run `sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS,ExitCode`.
 | The agent invented a module version or paths | Remind it to run `module spider python`, or use the reference scripts |
 | The agent finished without printing the commands | Ask it to print the commands to type, step by step |
 | The student pasted the prompt without replacing `<PATH>`, `<PARTITION>` or `<ACCOUNT>` | Re-paste with the three values filled in |
+
+## Fallback: download the corpus to your home directory
+
+If a student can't read the shared corpus folder, or it is very slow, have them download their own
+copy (about 40 MB, 40 files). Run on the cluster, for example in the Research Desktop terminal:
+
+```
+mkdir -p ~/ling_corpus && cd ~/ling_corpus
+wget https://github.com/chunlchan/ling-hpc-workshop/releases/download/2026-10-12_01/prepared_4k_concat.zip
+unzip prepared_4k_concat.zip
+ls prepared_4k_concat | wc -l      # should print 40
+echo $PWD/prepared_4k_concat       # this is the path to use
+```
+
+Then the student pastes the prompt again with the printed path as `<PATH>` (the partition and
+account stay the same). The rest of the activity is unchanged, and the expected numbers are the same.
 
 ## When nothing else works
 
