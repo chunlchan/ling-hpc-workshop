@@ -20,7 +20,7 @@ Cluster-specific values (account, partition, module version, corpus path) are pl
 | [`INSTRUCTOR_GUIDE.md`](INSTRUCTOR_GUIDE.md) | Answer sheet (expected numbers) and troubleshooting for common failures |
 | [`reference/`](reference/) | Tested serial script and SLURM script, to use as a fallback if a student's agent-written version fails. Also a parallel (multiprocessing) version for future use, with a student README |
 | [`corpus_prep/`](corpus_prep/) | Scripts and the book list used to build the corpus |
-| [`docs/`](docs/) | The workshop slide deck: a single HTML page, published with GitHub Pages at <https://chunlchan.github.io/ling-hpc-workshop/> (short link: <https://go.iu.edu/yPx3ED>) |
+| [`docs/`](docs/) | The workshop slide deck: a single HTML page, published with GitHub Pages at <https://chunlchan.github.io/ling-hpc-workshop/> (short link: <https://go.iu.edu/ling-hpc-workshop>) |
 | [`archive/PLAN.md`](archive/PLAN.md) | The original design notes, kept for reference (partly out of date) |
 
 ## Instructor quick start
