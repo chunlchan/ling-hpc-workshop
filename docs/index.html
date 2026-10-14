@@ -2,311 +2,617 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your First Cluster Job</title>
-<meta name="description" content="Workshop slides: have the pi coding agent write your first HPC job, then submit it yourself.">
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<meta name="description" content="A step-by-step walkthrough: have the pi coding agent write a bigram-counting job, then check, submit and monitor it yourself on the Quartz cluster.">
 
 <style>
   :root {
     --crimson: #990000;
     --crimson-dark: #660000;
     --cream: #eeedeb;
+    --paper: #ffffff;
     --ink: #1f1f1f;
     --muted: #555555;
+    --line: #d8d6d2;
     --green: #2e7d32;
+    --green-bg: #eef6ef;
+    --red-bg: #fbeded;
+    --grey-bg: #f3f2f0;
     --code-bg: #1e1e1e;
     --code-fg: #f4f4f4;
-
-    --r-background-color: #eeedeb;
-    --r-main-color: #1f1f1f;
-    --r-main-font-size: 28px;
-    --r-heading-color: #990000;
-    --r-heading-text-transform: none;
-    --r-heading-font-weight: 700;
-    --r-link-color: #990000;
-    --r-link-color-hover: #660000;
   }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--cream); color: var(--ink); line-height: 1.55; font-size: 18px;
+         font-family: "Source Sans Pro", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  code, pre, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-ligatures: none; }
+  code { background: var(--grey-bg); border-radius: 4px; padding: .05em .35em; font-size: .88em; }
+  kbd { background: #fff; border: 1px solid #b9b7b2; border-bottom-width: 2px; border-radius: 5px; padding: .02em .42em; font-size: .85em; }
+  a { color: var(--crimson); }
+  h1, h2, h3 { line-height: 1.25; }
 
-  html, body { background: var(--cream); }
-  .reveal .slides { text-align: left; }
-  .reveal .slides section { padding-top: .6em; }
-  .reveal h1 { font-size: 1.9em; margin-bottom: .15em; }
-  .reveal h2 { font-size: 1.45em; margin-bottom: .45em; }
-  .reveal h3 { font-size: 1em; color: var(--ink); margin: 0 0 .3em; }
-  .reveal p, .reveal li { line-height: 1.35; }
-  .reveal ul, .reveal ol { margin: .3em 0 .3em 1em; display: block; }
-  .reveal li { margin: .25em 0; }
-  .reveal code, .reveal pre, .bg, .sentence, .check, button.chip {
-    font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0;
-  }
-  .reveal code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+  /* top bar */
+  .topbar { position: sticky; top: 0; z-index: 50; background: var(--crimson); color: #fff; }
+  .topbar .in { max-width: 920px; margin: 0 auto; padding: .55rem 20px; display: flex; gap: 1.1rem; align-items: center; flex-wrap: wrap; }
+  .topbar a { color: #fff; text-decoration: none; font-weight: 600; font-size: .92rem; }
+  .topbar a:hover { text-decoration: underline; }
+  .topbar .title { font-weight: 700; margin-right: auto; }
+  .topbar .prog { font-size: .85rem; opacity: .9; }
 
-  .sub { font-size: 1.05em; color: var(--muted); margin: 0 0 .9em; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; align-items: start; }
-  .card { background: #fff; border-radius: 10px; padding: .7em .9em; border-left: 6px solid var(--crimson); }
-  .small { font-size: .78em; color: var(--muted); }
-  .note { font-size: .8em; color: var(--muted); margin-top: .6em; }
+  main { max-width: 920px; margin: 0 auto; padding: 0 20px 120px; }
+  section, .anchor { scroll-margin-top: 70px; }
 
-  /* bigram example */
-  .sentence { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .95em;
-              background: #fff; border-radius: 8px; padding: .4em .7em; display: inline-block; }
-  .bigrams { display: flex; flex-wrap: wrap; gap: .35em .45em; margin: .5em 0; }
-  .bg { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82em; background: #fff;
-        border: 2px solid #c9c7c3; border-radius: 6px; padding: .1em .5em; }
-  .bg.hot { border-color: var(--crimson); color: var(--crimson); font-weight: 700; }
+  .hero { padding: 2rem 0 .4rem; }
+  .hero h1 { font-size: 2.1rem; color: var(--crimson); margin: 0 0 .4rem; }
+  .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 1rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .card { background: var(--paper); border-radius: 12px; padding: 1rem 1.2rem; border-left: 6px solid var(--crimson); }
+  .card h3 { margin: 0 0 .4rem; font-size: 1.02rem; }
+  .card ul { margin: .2rem 0 .2rem 1.1rem; padding: 0; }
+  .toc { background: var(--paper); border-radius: 12px; padding: 1rem 1.4rem; margin: 1rem 0; }
+  .toc ol { margin: .3rem 0 0 1.2rem; padding: 0; columns: 2; column-gap: 2rem; }
+  .toc li { margin: .15rem 0; break-inside: avoid; }
+  .toc .t { color: var(--muted); font-size: .85em; }
 
-  /* workflow */
-  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: .7em 1em; margin: .4em 0 .7em; }
-  .step { background: #fff; border-radius: 10px; padding: .55em .8em; display: flex; gap: .7em; align-items: flex-start; }
-  .step .n { flex: none; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--crimson); color: #fff;
-             font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .step b { display: block; }
-  .step span { font-size: .8em; color: var(--muted); }
-  .flow { font-size: .85em; display: flex; flex-wrap: wrap; align-items: center; gap: .4em; }
-  .flow .box { background: #fff; border: 2px solid var(--crimson); border-radius: 8px; padding: .15em .6em; }
-  .flow .arrow { color: var(--crimson); font-weight: 700; }
+  /* steps */
+  .step { background: var(--paper); border-radius: 14px; padding: 1.3rem 1.5rem 1.4rem; margin: 1.5rem 0; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .step > header { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; margin-bottom: .6rem; }
+  .step h2 { margin: 0; font-size: 1.45rem; color: var(--crimson); flex: 1 1 auto; }
+  .num { flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--crimson); color: #fff; font-weight: 700;
+         display: flex; align-items: center; justify-content: center; }
+  .time { font-size: .8rem; color: var(--muted); background: var(--grey-bg); border-radius: 999px; padding: .1rem .6rem; white-space: nowrap; }
+  .done { font-size: .85rem; color: var(--muted); display: flex; gap: .35rem; align-items: center; cursor: pointer; user-select: none; }
+  .done input { width: 1.05rem; height: 1.05rem; accent-color: var(--green); }
+  .step p { margin: .5rem 0; }
+  .step h3 { margin: 1.1rem 0 .3rem; font-size: 1.05rem; }
+  .step ol, .step ul { margin: .4rem 0 .4rem 1.3rem; padding: 0; }
+  .step li { margin: .3rem 0; }
+  .small { font-size: .88rem; color: var(--muted); }
 
-  /* code blocks with copy buttons */
-  .reveal pre.copy { position: relative; width: 100%; margin: .4em 0; box-shadow: none;
-                     background: var(--code-bg); color: var(--code-fg); border-radius: 8px; font-size: .6em; }
-  .reveal pre.copy code { display: block; padding: .75em 5.2em .75em .9em; max-height: none; overflow: visible;
-                          background: none; color: inherit; white-space: pre-wrap; word-break: break-all; line-height: 1.45; }
-  .copybtn { position: absolute; top: .45em; right: .5em; font: inherit; font-size: .85em; padding: .15em .7em;
-             border-radius: 6px; border: 1px solid #8a8a8a; background: #3a3a3a; color: #fff; cursor: pointer; }
+  .box { border-radius: 10px; padding: .7rem 1rem; margin: .9rem 0; border-left: 6px solid #888; background: var(--grey-bg); }
+  .box > :first-child { margin-top: 0; } .box > :last-child { margin-bottom: 0; }
+  .box.check { border-color: var(--green); background: var(--green-bg); }
+  .box.stop { border-color: var(--crimson); background: var(--red-bg); }
+  .box .label { font-weight: 700; display: block; margin-bottom: .15rem; }
+  .box.check .label { color: var(--green); }
+  .box.stop .label { color: var(--crimson); }
+
+  /* code blocks */
+  pre { margin: .6rem 0; }
+  pre.copy, pre.out { background: var(--code-bg); color: var(--code-fg); border-radius: 8px; font-size: .86rem; line-height: 1.5; position: relative; overflow-x: auto; }
+  pre.copy code, pre.out code { display: block; background: none; color: inherit; padding: .8rem 5.4rem .8rem 1rem; font-size: inherit; white-space: pre-wrap; word-break: break-word; }
+  pre.out { background: #2b2b2b; }
+  pre.out code { padding-right: 1rem; }
+  .copybtn { position: absolute; top: .45rem; right: .5rem; font: inherit; font-size: .8rem; padding: .15rem .7rem; border-radius: 6px;
+             border: 1px solid #8a8a8a; background: #3a3a3a; color: #fff; cursor: pointer; }
   .copybtn:hover { background: #555; }
   .copybtn.done { background: var(--green); border-color: var(--green); }
 
-  /* click-to-copy value chips */
-  table.vals { border-collapse: separate; border-spacing: 0 .35em; width: 100%; font-size: .85em; }
-  table.vals td { padding: 0 .5em 0 0; vertical-align: middle; border: 0; }
-  table.vals td:first-child { white-space: nowrap; }
-  button.chip { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8em; background: #fff; color: var(--crimson);
-                border: 2px solid var(--crimson); border-radius: 8px; padding: .12em .6em; cursor: pointer; text-align: left; }
-  button.chip::after { content: "  copy"; font-family: inherit; font-size: .72em; color: var(--muted); }
+  /* value chips */
+  .vals { width: 100%; border-collapse: separate; border-spacing: 0 .4rem; }
+  .vals td { vertical-align: middle; padding: 0 .6rem 0 0; }
+  .vals td:first-child { white-space: nowrap; }
+  button.chip { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; background: #fff; color: var(--crimson); text-align: left;
+                border: 2px solid var(--crimson); border-radius: 8px; padding: .15rem .65rem; cursor: pointer; word-break: break-all; }
+  button.chip::after { content: "  copy"; font-family: inherit; font-size: .72rem; color: var(--muted); }
   button.chip.done { border-color: var(--green); color: var(--green); }
   button.chip.done::after { content: "  copied!"; color: var(--green); }
 
-  button.chip.long { font-size: .66em; }
-  .cap { font-size: .78em; color: var(--muted); margin: .55em 0 0; }
-  ul.checklist { list-style: none; margin: .2em 0 .5em 0; padding: 0; }
-  ul.checklist li { font-size: .82em; margin: .3em 0; padding-left: 1.5em; position: relative; line-height: 1.3; }
-  ul.checklist code { white-space: nowrap; }
-  ul.checklist li::before { content: "\2610"; color: var(--crimson); position: absolute; left: 0; top: -.05em; font-size: 1.15em; }
-  .reminder { background: #fff; border-left: 6px solid var(--crimson); border-radius: 8px; padding: .35em .7em;
-              font-size: .82em; margin: .5em 0 0; }
-
-  a.button { display: inline-block; background: var(--crimson); color: #fff !important; text-decoration: none;
-             border-radius: 8px; padding: .25em .8em; font-weight: 700; font-size: .9em; }
+  a.button { display: inline-block; background: var(--crimson); color: #fff !important; text-decoration: none; border-radius: 8px;
+             padding: .3rem .9rem; font-weight: 700; }
   a.button:hover { background: var(--crimson-dark); }
 
-  .check { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .62em; background: #fff; border-radius: 8px;
-           padding: .6em .9em; border-left: 6px solid var(--green); line-height: 1.55; white-space: pre; }
+  /* bigram example */
+  .sentence { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--grey-bg); border-radius: 8px; padding: .4rem .7rem; display: inline-block; }
+  .bigrams { display: flex; flex-wrap: wrap; gap: .35rem .45rem; margin: .6rem 0; }
+  .bg { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88rem; background: #fff; border: 2px solid var(--line); border-radius: 6px; padding: .05rem .5rem; }
+  .bg.hot { border-color: var(--crimson); color: var(--crimson); font-weight: 700; }
 
-  .footer { position: fixed; left: 1.2em; bottom: .6em; font-size: 20px; font-weight: 600; z-index: 30; }
-  .footer a { color: var(--crimson); text-decoration: none; }
-  .footer .alt { font-size: 15px; font-weight: 400; color: var(--muted); margin-left: .9em; }
-  noscript p { background: #fff; padding: 1em; margin: 1em; border-left: 6px solid var(--crimson); }
+  table.t { border-collapse: collapse; width: 100%; font-size: .93rem; margin: .5rem 0; }
+  table.t th, table.t td { border-bottom: 1px solid var(--line); padding: .4rem .55rem; text-align: left; vertical-align: top; }
+  table.t th { background: var(--grey-bg); }
+  table.t td:first-child { white-space: nowrap; }
+
+  details { background: var(--grey-bg); border-radius: 8px; padding: .4rem .8rem; margin: .4rem 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: .3rem; }
+
+  .checklist { list-style: none; padding: 0; margin: .4rem 0; }
+  .checklist li { position: relative; padding-left: 1.7rem; margin: .35rem 0; }
+  .checklist li::before { content: "\2610"; position: absolute; left: 0; top: -.1rem; color: var(--crimson); font-size: 1.2rem; }
+
+  /* let long commands and words wrap instead of widening the page on small screens */
+  .step, .card, .toc, .box, table.t th, table.t td { overflow-wrap: anywhere; }
+  table.t { table-layout: auto; }
+
+  .shots { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; margin: .7rem 0; }
+  .shots figure { margin: 0; max-width: 100%; }
+  .shots img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .shots figcaption { font-size: .85rem; color: var(--muted); margin-top: .3rem; max-width: 22rem; }
+
+  footer { max-width: 920px; margin: 0 auto; padding: 0 20px 2rem; color: var(--muted); font-size: .9rem; }
+
+  @media (max-width: 720px) {
+    body { font-size: 17px; }
+    .grid2 { grid-template-columns: 1fr; }
+    .toc ol { columns: 1; }
+    .step { padding: 1.1rem 1rem; }
+    .hero h1 { font-size: 1.7rem; }
+    table.t td:first-child { white-space: normal; }
+  }
+  noscript p { background: #fff; padding: 1rem; border-left: 6px solid var(--crimson); }
 </style>
 </head>
 
 <body>
-<noscript><p>This page needs JavaScript. The prompt is here:
-<a href="https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md">AGENT_PROMPT.md</a>.</p></noscript>
+<div class="topbar"><div class="in">
+  <span class="title">Your first cluster job</span>
+  <a href="#steps">Steps</a>
+  <a href="#cheat">Cheat sheet</a>
+  <a href="#help">Get help</a>
+  <span class="prog" id="prog"></span>
+</div></div>
 
-<div class="reveal">
-<div class="slides">
+<main>
+<noscript><p>The copy buttons need JavaScript. Everything else on this page works without it.</p></noscript>
 
-<!-- 1. The task -->
-<section>
-  <h1>Counting bigrams on a cluster</h1>
-  <p class="sub">Your first HPC job: written by an AI agent (pi), submitted by you</p>
+<!-- ============================ Intro ============================ -->
+<div class="hero">
+  <h1>Your first cluster job: counting bigrams</h1>
+  <p class="lead">You will ask an AI agent (<b>pi</b>) to write a small Python program and a batch script. Then you
+    <b>check the script, submit the job to Quartz yourself, watch it run, and read the results.</b> It takes about 30 minutes,
+    at your own pace.</p>
 
-  <div class="cols">
-    <div>
-      <h3>What is a bigram?</h3>
-      <p style="margin:.2em 0 .5em">A pair of consecutive words.</p>
-      <div class="sentence">the cat sat on the mat and the cat slept</div>
-      <div class="bigrams">
-        <span class="bg hot">the cat &times;2</span>
-        <span class="bg">cat sat</span>
-        <span class="bg">sat on</span>
-        <span class="bg">on the</span>
-        <span class="bg">the mat</span>
-        <span class="bg">mat and</span>
-        <span class="bg">and the</span>
-        <span class="bg">cat slept</span>
-      </div>
-      <p class="small">10 words &rarr; 9 bigrams (8 distinct)</p>
-    </div>
-
+  <div class="grid2">
     <div class="card">
-      <h3>What your job does</h3>
+      <h3>When you finish, you can</h3>
       <ul>
-        <li>Reads <b>3,999 passages</b> (about 5,000 words each) from Project Gutenberg books: <b>19.5 million words</b></li>
-        <li>Counts the word pairs inside each passage and adds them up</li>
-        <li>Prints the <b>top 20</b> bigrams and saves the top 1,000 to a file</li>
+        <li>read a SLURM batch script and say what each <code>#SBATCH</code> line asks for</li>
+        <li>submit, monitor and cancel a job</li>
+        <li>find and check the job's output</li>
+        <li>explain why work runs through a scheduler on compute nodes, not on the login machine</li>
+        <li>say what a bigram count is, and read the top bigrams</li>
       </ul>
-      <p class="note">The linguistics is simple on purpose. The point is the workflow: request resources, submit, wait, read results.</p>
     </div>
-  </div>
-</section>
-
-<!-- 2. The workflow -->
-<section>
-  <h2>The workflow</h2>
-  <div class="steps">
-    <div class="step"><div class="n">1</div><div><b>Get the prompt</b><span>Save it as <code>prompt.txt</code></span></div></div>
-    <div class="step"><div class="n">2</div><div><b>Edit the prompt</b><span>Fill in three values (path, partition, account) and delete the header</span></div></div>
-    <div class="step"><div class="n">3</div><div><b>Give it to pi</b><span>It writes a Python program and a batch script, then prints the commands to run</span></div></div>
-    <div class="step"><div class="n">4</div><div><b>You submit the job</b><span>Check the batch script, run the commands, watch the queue, read the results</span></div></div>
-  </div>
-
-  <h3>What happens when you submit</h3>
-  <div class="flow">
-    <span class="box">You: <code>sbatch</code></span><span class="arrow">&rarr;</span>
-    <span class="box">Queue (<code>PD</code>)</span><span class="arrow">&rarr;</span>
-    <span class="box">Compute node (<code>R</code>)</span><span class="arrow">&rarr;</span>
-    <span class="box">Results in <code>/N/scratch/$USER</code></span>
-  </div>
-  <p class="note"><b>pi</b> writes the scripts. <b>You</b> run <code>sbatch</code>: pi is told not to submit the job for you.</p>
-</section>
-
-<!-- 3. Copy, edit, paste -->
-<section>
-  <h2>Get the prompt, edit it, give it to pi</h2>
-  <div class="cols">
-    <div>
-      <h3>1. Save the prompt</h3>
-      <p style="margin:.1em 0 .4em">In Firefox on the Research Desktop:
-        <a class="button" href="https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md" target="_blank" rel="noopener">Open the prompt &#8599;</a></p>
-      <p class="small" style="margin:.1em 0 .5em">Press <b>Ctrl+S</b> and save it as <code>prompt.txt</code> anywhere you'll remember. Or, in a terminal:</p>
-      <pre class="copy"><code>wget -O prompt.txt https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md</code></pre>
-    </div>
-
-    <div>
-      <h3>2. Edit <code>prompt.txt</code></h3>
-      <p class="small" style="margin:.1em 0 .3em">Replace each <code>&lt;...&gt;</code> <b>including the angle brackets</b>. Click a value to copy it.</p>
-      <table class="vals">
-        <tr><td><code>&lt;PATH&gt;</code></td><td><button class="chip long" data-copy="/N/project/rpworkshop/corpus/prepared_4k_concat/">/N/project/rpworkshop/corpus/prepared_4k_concat/</button></td></tr>
-        <tr><td><code>&lt;PARTITION&gt;</code></td><td><button class="chip" data-copy="general">general</button> <span class="small">(or <b>debug</b> if general is busy)</span></td></tr>
-        <tr><td><code>&lt;ACCOUNT&gt;</code></td><td><button class="chip" data-copy="c02318">c02318</button> <span class="small">(or your own allocation; ask if unsure)</span></td></tr>
-      </table>
-      <p class="reminder"><b>Then delete the header:</b> everything above the <code>---</code> line at the top of
-        <code>prompt.txt</code>, plus that line. Keep the rest.</p>
-
-      <h3 style="margin-top:.7em">3. Start pi in an empty folder</h3>
-      <pre class="copy"><code>mkdir -p ~/bigrams &amp;&amp; cd ~/bigrams
-pi</code></pre>
-      <p class="small" style="margin:.1em 0">Already in pi? Restart it from this folder. Then paste the whole of
-        <code>prompt.txt</code> into pi.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 4. Check the batch script -->
-<section>
-  <h2>Before you submit: check the batch script</h2>
-  <div class="cols">
-    <div>
-      <h3>1. Look at the script pi wrote</h3>
-      <p style="margin:.1em 0 .5em">In the file manager, open the folder where you started pi (<code>~/bigrams</code>).
-        Double-click <code>run_bigrams.slurm</code> and choose <b>Display</b>.</p>
-      <p class="small">Choose Display, not Run or Execute: the script is meant to be submitted to the cluster, not run here.</p>
-      <p class="small" style="margin:.7em 0 .2em">Or, from a terminal:</p>
-      <pre class="copy"><code>cat ~/bigrams/run_bigrams.slurm</code></pre>
-    </div>
-    <div>
-      <h3>2. Confirm it matches what you chose</h3>
-      <ul class="checklist">
-        <li><code>--partition</code> is your partition (<code>general</code> or <code>debug</code>)</li>
-        <li><code>--account</code> is <code>c02318</code> <span class="small">(or your own allocation)</span></li>
-        <li><code>--cpus-per-task=1</code>, <code>--mem=4G</code> and <code>--time=00:10:00</code></li>
-        <li>a <code>module load python/...</code> line, and <b>no</b> <code>module purge</code></li>
-        <li><code>CORPUS_DIR</code> is the path you put in the prompt, and <code>OUTPUT_DIR</code> is <code>/N/scratch/$USER</code></li>
-        <li><code>--output</code> and <code>--error</code> point to <code>/N/scratch/%u/...</code></li>
+    <div class="card">
+      <h3>You need</h3>
+      <ul>
+        <li><b>pi</b> installed on Quartz and answering (connected to your LLM service with your API key)</li>
+        <li>access to the workshop allocation, <code>c02318</code>, or an allocation of your own</li>
+        <li>a terminal on Quartz, for example in the Research Desktop</li>
       </ul>
-      <p class="reminder"><b>Something wrong?</b> Tell pi what to fix, and ask it to update the script <b>before</b> you submit.</p>
+      <p class="small" style="margin:.5rem 0 0">Stuck at any point? Jump to <a href="#help">Get help</a> or email
+        <a href="mailto:cc155@iu.edu">cc155@iu.edu</a>.</p>
     </div>
+  </div>
+
+  <div class="toc anchor" id="steps">
+    <b>The steps</b>
+    <ol>
+      <li><a href="#step-0">Check your setup</a> <span class="t">5 min</span></li>
+      <li><a href="#step-1">What the job does</a> <span class="t">3 min</span></li>
+      <li><a href="#step-2">Get the prompt and edit it</a> <span class="t">5 min</span></li>
+      <li><a href="#step-3">Start pi and give it the prompt</a> <span class="t">5 min</span></li>
+      <li><a href="#step-4">Read the batch script</a> <span class="t">5 min</span></li>
+      <li><a href="#step-5">Dry run, then submit</a> <span class="t">3 min</span></li>
+      <li><a href="#step-6">Watch your job</a> <span class="t">2 to 5 min</span></li>
+      <li><a href="#step-7">Read your results</a> <span class="t">3 min</span></li>
+      <li><a href="#step-8">Reflect and go further</a> <span class="t">optional</span></li>
+    </ol>
+  </div>
+</div>
+
+<!-- ============================ Step 0 ============================ -->
+<section class="step" id="step-0" data-step="0">
+  <header><span class="num">0</span><h2>Check your setup</h2><span class="time">5 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <ol>
+    <li>Open a terminal on Quartz.</li>
+    <li>Start pi:
+      <pre class="copy"><code>pi</code></pre></li>
+    <li><b>Switch to the Gemma model.</b> Inside pi, type this and press <kbd>Enter</kbd>:
+      <pre class="copy"><code>/model</code></pre>
+      Choose the <b>Gemma</b> model from the list (arrow keys, then <kbd>Enter</kbd>). We recommend Gemma for this exercise: pi's default model may follow the prompt less reliably.
+      The model's name is shown at the bottom of pi's screen, so you can check which one is selected. pi forgets the choice when it restarts, and when you type <code>/new</code>, so you will repeat this in step 3.</li>
+    <li>Type a simple question and press <kbd>Enter</kbd>, for example <code>Say hello in one sentence.</code></li>
+    <li>When pi answers, leave it by typing <code>/quit</code> and pressing <kbd>Enter</kbd>.</li>
+  </ol>
+  <div class="box check"><span class="label">✓ Checkpoint</span>pi answered you using the Gemma model, and you were able to leave it. If pi doesn't start or doesn't answer, the cause is
+    usually your API key or network setup: <a href="mailto:cc155@iu.edu">email me</a> before going on.</div>
+  <div class="box"><span class="label">Keep your API key private</span>Never paste it into the prompt, a script, a screenshot or an email.</div>
+
+  <div class="box" id="copypaste"><span class="label">Copy and paste in the Research Desktop</span>
+    <ul>
+      <li><b>Simplest:</b> open this page in Firefox <b>inside</b> the Research Desktop. The Copy buttons then copy straight into the desktop, and you paste into a terminal with
+        <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> (plain <kbd>Ctrl</kbd>+<kbd>V</kbd> doesn't work in a terminal).</li>
+      <li><b>ThinLinc client app:</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> pastes into the terminal.</li>
+      <li><b>Web version of the Research Desktop</b> (in a browser tab): your computer's clipboard isn't shared automatically. Use the <b>clipboard panel</b> to send text to the desktop (steps below).</li>
+    </ul>
+    <details><summary>Web version: how to paste text into the desktop (with screenshots)</summary>
+      <ol>
+        <li>Click the small <b>&gt;</b> tab on the left edge of the browser window to reveal the control bar.</li>
+        <li>In the control bar, click the <b>clipboard icon</b>.</li>
+        <li>A <b>Clipboard</b> panel opens with a text box. On your own computer, copy the text you want (for example with a Copy button on this page, or <kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Cmd</kbd>+<kbd>C</kbd>),
+          then paste it into that text box with your computer's normal paste (<kbd>Ctrl</kbd>+<kbd>V</kbd> / <kbd>Cmd</kbd>+<kbd>V</kbd>). The text is now on the Research Desktop's clipboard.</li>
+        <li>Click in the desktop's terminal and paste with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>, or right-click and choose Paste, or use the terminal's Edit menu.</li>
+      </ol>
+      <div class="shots">
+        <figure><img src="images/red_copypaste1.jpg" width="220" alt="The Research Desktop in a browser, with a red arrow pointing at the small > tab on the left edge of the window"><figcaption>1. The small <b>&gt;</b> tab on the left edge</figcaption></figure>
+        <figure><img src="images/red_copypaste2.png" width="110" alt="The control bar, with a red arrow pointing at the clipboard icon"><figcaption>2. The <b>clipboard</b> icon</figcaption></figure>
+        <figure><img src="images/red_copypaste3.png" width="360" alt="The Clipboard panel: 'Edit clipboard content in the textarea below', with an empty text box"><figcaption>3. Paste into the text box</figcaption></figure>
+      </div>
+    </details></div>
+
+  <h3>Have these three values ready (you will use them in step 2)</h3>
+  <p class="small" style="margin-top:0">Click a value to copy it.</p>
+  <table class="vals">
+    <tr><td><code>&lt;PATH&gt;</code> the corpus folder</td><td><button class="chip" data-copy="/N/project/rpworkshop/corpus/prepared_4k_concat/">/N/project/rpworkshop/corpus/prepared_4k_concat/</button></td></tr>
+    <tr><td><code>&lt;PARTITION&gt;</code> the queue</td><td><button class="chip" data-copy="general">general</button> <span class="small">(or <b>debug</b> if general is very busy)</span></td></tr>
+    <tr><td><code>&lt;ACCOUNT&gt;</code> the allocation</td><td><button class="chip" data-copy="c02318">c02318</button> <span class="small">(or your own allocation)</span></td></tr>
+  </table>
+</section>
+
+<!-- ============================ Step 1 ============================ -->
+<section class="step" id="step-1" data-step="1">
+  <header><span class="num">1</span><h2>What the job does</h2><span class="time">3 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <p>A <b>bigram</b> is a pair of consecutive words. Counting bigrams shows which phrases a text uses most, and bigram counts are the basis of simple language models.</p>
+  <p><span class="sentence">the cat sat on the mat and the cat slept</span> has 10 words, so <b>9 bigrams</b> (8 distinct):</p>
+  <div class="bigrams">
+    <span class="bg hot">the cat &times;2</span><span class="bg">cat sat</span><span class="bg">sat on</span><span class="bg">on the</span>
+    <span class="bg">the mat</span><span class="bg">mat and</span><span class="bg">and the</span><span class="bg">cat slept</span>
+  </div>
+  <p><b>Your job</b> reads 3,999 passages (about 5,000 words each) from Project Gutenberg books, 19.5 million words in all. It counts the word pairs inside each passage, adds them up,
+    prints the 20 most frequent bigrams, and saves the top 1,000 to a file.</p>
+  <p><b>About the data.</b> The corpus was downloaded from Project Gutenberg books and cleaned <b>ahead of time</b> (the Gutenberg headers and license text removed), so you don't have to do that.
+    It lives in a folder under <code>/N/project/</code>, which is IU's <b>Slate-Project</b> storage. Slate-Project is the preferred filesystem for computing on Quartz,
+    and it is also a good place to keep your own research data, because it is shared between you, your advisor and anyone on your team.</p>
+  <p class="small">The linguistics is simple on purpose. The point is the workflow: request resources, check the script, submit, wait, read the results.</p>
+</section>
+
+<!-- ============================ Step 2 ============================ -->
+<section class="step" id="step-2" data-step="2">
+  <header><span class="num">2</span><h2>Get the prompt and edit it</h2><span class="time">5 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <p>The prompt is a text file that tells pi what to write. You will save a copy in your working folder, fill in three values, and remove a short header.</p>
+
+  <h3>2a. Make a working folder and save the prompt in it as <code>prompt.txt</code></h3>
+  <p>This folder is where pi will work and write its files. In a terminal, one command makes the folder and downloads the prompt into it:</p>
+  <pre class="copy"><code>mkdir -p ~/bigrams &amp;&amp; cd ~/bigrams
+wget -O prompt.txt https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md</code></pre>
+  <p class="small">Prefer your browser? Run just the <code>mkdir</code> line, then
+    <a href="https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/AGENT_PROMPT.md" target="_blank" rel="noopener">open the prompt &#8599;</a>,
+    press <kbd>Ctrl</kbd>+<kbd>S</kbd>, and save it as <code>prompt.txt</code> inside the <code>bigrams</code> folder.</p>
+
+  <h3>2b. Open it in a text editor</h3>
+  <p>Use any editor you like. In a terminal, <code>nano</code> works everywhere:</p>
+  <pre class="copy"><code>nano ~/bigrams/prompt.txt</code></pre>
+  <p class="small">In nano: arrow keys move, <kbd>Ctrl</kbd>+<kbd>K</kbd> deletes the current line, <kbd>Ctrl</kbd>+<kbd>O</kbd> then <kbd>Enter</kbd> saves, <kbd>Ctrl</kbd>+<kbd>X</kbd> exits.</p>
+
+  <h3>2c. Replace the three values</h3>
+  <p>In the "My settings" section, replace each <code>&lt;...&gt;</code> <b>including the angle brackets</b> with the values from step 0:
+    <code>&lt;PATH&gt;</code>, <code>&lt;PARTITION&gt;</code> and <code>&lt;ACCOUNT&gt;</code>. (You can leave the text in parentheses after each one.)</p>
+
+  <h3>2d. Delete the header</h3>
+  <p>At the top of the file is a short "How to use this" header. Delete <b>everything above the <code>---</code> line, and the <code>---</code> line itself</b>. Keep everything below it.</p>
+
+  <div class="box check"><span class="label">✓ Checkpoint</span>
+    Save the file, then run:
+    <pre class="copy"><code>grep -n -E '&lt;PATH&gt;|&lt;PARTITION&gt;|&lt;ACCOUNT&gt;' ~/bigrams/prompt.txt
+head -3 ~/bigrams/prompt.txt</code></pre>
+    The first command should print <b>nothing</b> (no placeholders left). If it prints lines, those values still need replacing.
+    The second should show a blank line, then <code>I'm new to HPC. Please help me write my first job...</code>. If you still see
+    a title or "How to use this", delete the header.
   </div>
 </section>
 
-<!-- 5. Run it, check it -->
-<section>
-  <section>
-    <h2>Run it, then check your answer</h2>
-    <div class="cols">
-      <div>
-        <h3>pi prints commands. Run them one at a time.</h3>
-        <p class="small" style="margin:.1em 0 .2em">Type these yourself in a terminal (a second one, or after exiting pi), not through pi.</p>
-        <p class="cap">Submit the job</p>
-        <pre class="copy"><code>sbatch run_bigrams.slurm</code></pre>
-        <p class="cap">Watch the queue: <b>PD</b> = waiting, <b>R</b> = running, gone = finished</p>
-        <pre class="copy"><code>squeue --me</code></pre>
-        <p class="cap">Read the results (use the job number <code>sbatch</code> printed in place of <code>&lt;jobid&gt;</code>)</p>
-        <pre class="copy"><code>cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.out</code></pre>
-      </div>
-      <div>
-        <h3>Your numbers should match</h3>
-<div class="check">Documents (lines):  3,999
-Total bigrams:      19,500,939
-Distinct bigrams:   5,306,726
-Most frequent:      "of the" (177,785)
-Runtime:            about 30 s (varies)</div>
-        <p class="note">Your output layout may differ from your neighbor's. The numbers should not.</p>
-      </div>
-    </div>
-    <p class="note" style="text-align:right">Press &darr; for the fallback and troubleshooting</p>
-  </section>
+<!-- ============================ Step 3 ============================ -->
+<section class="step" id="step-3" data-step="3">
+  <header><span class="num">3</span><h2>Start pi and give it the prompt</h2><span class="time">5 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
 
-  <section>
-    <h2>If the corpus path doesn't work</h2>
-    <p style="margin:.1em 0 .3em">Permission denied, folder not found, or very slow? Download your own copy:</p>
-    <pre class="copy"><code>mkdir -p ~/ling_corpus &amp;&amp; cd ~/ling_corpus
+  <ol>
+    <li>Start pi in your working folder, so the files pi writes land there:
+      <pre class="copy"><code>cd ~/bigrams
+pi</code></pre></li>
+    <li><b>Select the Gemma model.</b> Type <code>/model</code>, press <kbd>Enter</kbd>, and choose Gemma with the arrow keys. Check the model name at the bottom of pi's screen.
+      pi goes back to its default model every time it starts <b>and every time you type <code>/new</code></b>, so do this every time, before you send anything.</li>
+    <li>Send pi this message. pi reads <code>prompt.txt</code> itself, so there is nothing to copy out of the file:
+      <pre class="copy"><code>Read prompt.txt in this folder and follow its instructions exactly. I will submit the job myself, so do not run sbatch or the Python script.</code></pre>
+      Type it, or paste it (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>; see the <a href="#copypaste">copy and paste note</a> in step 0 if you use the web version), then press <kbd>Enter</kbd>.</li>
+    <li>Wait while pi works, usually a minute or two. It may look up Python versions with <code>module spider</code>. It should write two files and then <b>print some commands for you to type, and stop</b>.</li>
+  </ol>
+
+  <div class="box stop"><span class="label">Stop pi if it tries to run the job</span>
+    pi is told never to submit or run the job, because <b>you</b> do that. If you see it run <code>sbatch</code>, <code>srun</code>, or <code>python3 bigrams_serial.py</code>,
+    press <kbd>Esc</kbd> straight away. Then type <code>/quit</code>, check <code>squeue --me</code>, and cancel anything it submitted with <code>scancel &lt;jobid&gt;</code>.
+    Start again from step 3, and select Gemma again. (See the <a href="#cheat">cheat sheet</a>.)</div>
+
+  <div class="box check"><span class="label">✓ Checkpoint</span>
+    pi's last message lists commands like <code>sbatch run_bigrams.slurm</code> and then stops. Leave pi with <code>/quit</code>, then check:
+    <pre class="copy"><code>ls ~/bigrams
+squeue --me</code></pre>
+    You should see <code>prompt.txt</code>, <code>bigrams_serial.py</code> and <code>run_bigrams.slurm</code>, and <code>squeue --me</code> should show <b>no jobs</b> yet.
+  </div>
+</section>
+
+<!-- ============================ Step 4 ============================ -->
+<section class="step" id="step-4" data-step="4">
+  <header><span class="num">4</span><h2>Read the batch script</h2><span class="time">5 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <div class="box stop"><span class="label">Stop here: don't submit anything yet</span>
+    A batch script is a request to the scheduler. Reading it before you run it is the most useful habit in this whole exercise, and checking what an AI wrote for you is a habit worth having.</div>
+
+  <p>Print the script with line numbers:</p>
+  <pre class="copy"><code>cat -n ~/bigrams/run_bigrams.slurm</code></pre>
+
+  <h3>What each part means</h3>
+  <p class="small" style="margin-top:0">Your script may order the lines differently, but it should contain all of these.</p>
+  <table class="t">
+    <tr><th>Line</th><th>What it does</th></tr>
+    <tr><td><code>#SBATCH --partition=...</code></td><td>Which queue to wait in: <code>general</code> (or <code>debug</code>)</td></tr>
+    <tr><td><code>#SBATCH --account=...</code></td><td>Which allocation is charged for the job</td></tr>
+    <tr><td><code>#SBATCH --cpus-per-task=1</code></td><td>One CPU core. This is a serial job that uses a single process</td></tr>
+    <tr><td><code>#SBATCH --mem=4G</code></td><td>Memory limit. The job is killed if it needs more</td></tr>
+    <tr><td><code>#SBATCH --time=00:10:00</code></td><td>Time limit (hours:minutes:seconds). The job is killed when it runs out</td></tr>
+    <tr><td><code>#SBATCH --output / --error</code></td><td>Where the log files go. <code>%u</code> is your username and <code>%j</code> is the job number</td></tr>
+    <tr><td><code>module load python/...</code></td><td>Quartz provides software through modules, and a compute node starts without Python loaded</td></tr>
+    <tr><td><code>export CORPUS_DIR=...</code><br><code>export OUTPUT_DIR=...</code></td><td>Tell the program where the corpus is (read-only) and where to write its results</td></tr>
+    <tr><td><code>python3 bigrams_serial.py</code></td><td>The actual work: run the program pi wrote</td></tr>
+  </table>
+
+  <h3>Confirm your script matches what you chose</h3>
+  <ul class="checklist">
+    <li><code>--partition</code> is your partition (<code>general</code> or <code>debug</code>)</li>
+    <li><code>--account</code> is <code>c02318</code> <span class="small">(or your own allocation)</span></li>
+    <li><code>--cpus-per-task=1</code>, <code>--mem=4G</code> and <code>--time=00:10:00</code></li>
+    <li>a <code>module load python/...</code> line, and <b>no</b> <code>module purge</code></li>
+    <li><code>CORPUS_DIR</code> is the path you put in the prompt, and <code>OUTPUT_DIR</code> is <code>/N/scratch/$USER</code></li>
+    <li><code>--output</code> and <code>--error</code> point into <code>/N/scratch/%u/</code></li>
+  </ul>
+
+  <h3>Test yourself</h3>
+  <details><summary>What happens if the job needs more than 10 minutes?</summary>
+    The scheduler stops it, and <code>sacct</code> reports <code>TIMEOUT</code>. The time limit protects the shared cluster from runaway jobs.</details>
+  <details><summary>Where will you find the job's log?</summary>
+    In <code>/N/scratch/$USER/bigrams_&lt;jobid&gt;.out</code>, and any errors in the matching <code>.err</code> file.</details>
+  <details><summary>Why does the script load Python, when you already have Python in your own terminal?</summary>
+    The job runs on a compute node, which starts with a clean environment. Anything the program needs has to be loaded inside the script.</details>
+
+  <h3>If something is wrong</h3>
+  <p>Don't edit blindly. Start pi again in the same folder (select Gemma again with <code>/model</code>) and tell it exactly what to change, for example:</p>
+  <pre class="copy"><code>Please fix run_bigrams.slurm: the --account line should be c02318. Only edit the file. Do not run anything.</code></pre>
+  <p class="small">Then read the script again. Optional: read the counting loop in <code>cat -n ~/bigrams/bigrams_serial.py</code> and check that it counts pairs within each line only.</p>
+
+  <div class="box check"><span class="label">✓ Checkpoint</span>You can say what each <code>#SBATCH</code> line asks for, and every box in the checklist is ticked.</div>
+</section>
+
+<!-- ============================ Step 5 ============================ -->
+<section class="step" id="step-5" data-step="5">
+  <header><span class="num">5</span><h2>Dry run, then submit</h2><span class="time">3 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <h3>5a. Dry run</h3>
+  <p>A dry run asks the scheduler to check your script and the account, <b>without creating a job</b>:</p>
+  <pre class="copy"><code>cd ~/bigrams
+sbatch --test-only run_bigrams.slurm</code></pre>
+  <p>If all is well, you get one line like this (your numbers and times will differ):</p>
+  <pre class="out"><code>sbatch: Job 12243972 to start at 2026-10-15T08:47:51 using 1 processors on nodes c70 in partition general</code></pre>
+  <p class="small">The start time is an <b>estimate</b> of how long you might wait in the queue. No job exists yet: <code>squeue --me</code> still shows nothing.</p>
+  <p>If something is wrong with the account or partition, you get an error instead, such as:</p>
+  <pre class="out"><code>allocation failure: Invalid account or account/partition combination specified</code></pre>
+  <p class="small">In that case, fix the <code>--account</code> or <code>--partition</code> line (see step 4) and dry-run again.</p>
+
+  <h3>5b. Submit</h3>
+  <pre class="copy"><code>sbatch run_bigrams.slurm</code></pre>
+  <pre class="out"><code>Submitted batch job 12243986</code></pre>
+  <p><b>Write down the job number.</b> You will use it in the next steps.</p>
+
+  <div class="box"><span class="label">Optional: get an email when the job ends</span>
+    Use this <b>instead of</b> the plain command above (running both would submit the job twice):
+    <pre class="copy"><code>sbatch --mail-type=END,FAIL --mail-user=$USER@iu.edu run_bigrams.slurm</code></pre>
+    The cluster emails your IU address when the job finishes or fails. It can take a minute and may land in spam. Still use step 6 to watch the job: this job is short.</div>
+
+  <div class="box check"><span class="label">✓ Checkpoint</span>You saw <code>Submitted batch job ...</code> and wrote down the number.</div>
+</section>
+
+<!-- ============================ Step 6 ============================ -->
+<section class="step" id="step-6" data-step="6">
+  <header><span class="num">6</span><h2>Watch your job</h2><span class="time">2 to 5 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <p>Instead of retyping <code>squeue --me</code>, let the terminal refresh it for you every 5 seconds:</p>
+  <pre class="copy"><code>watch -n 5 squeue --me</code></pre>
+
+  <h3>What you will see</h3>
+  <pre class="out"><code>Every 5.0s: squeue --me                          Thu Oct 15 08:52:10 2026
+
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          12243986   general  bigrams    cc155  R       0:23      1 c70</code></pre>
+  <ul>
+    <li>The screen <b>clears and redraws</b> every 5 seconds. Between updates, nothing appears to move, so be patient.</li>
+    <li><code>ST</code> shows the state: <code>PD</code> means waiting in the queue, <code>R</code> means running. The <code>TIME</code> counter goes up while it runs.</li>
+    <li>When the job finishes, its row <b>disappears</b>, leaving only the header line. That means it is done.</li>
+    <li>Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop watching. (Without <code>watch</code>, <code>squeue --me -i 5</code> does the same.)</li>
+  </ul>
+
+  <p>A run takes anywhere from about 20 seconds to a minute once it starts. The wait before it starts depends on how busy the cluster is, from seconds to several minutes.</p>
+
+  <h3>Confirm how it ended</h3>
+  <p>The job vanishing from <code>squeue</code> doesn't tell you whether it worked. Ask the scheduler (use your job number):</p>
+  <pre class="copy"><code>sacct -j &lt;jobid&gt; --format=JobID,State,Elapsed,ExitCode</code></pre>
+  <table class="t">
+    <tr><th>State</th><th>Meaning</th></tr>
+    <tr><td><code>PENDING</code> / <code>PD</code></td><td>Waiting in the queue</td></tr>
+    <tr><td><code>RUNNING</code> / <code>R</code></td><td>Running on a compute node</td></tr>
+    <tr><td><code>COMPLETED</code></td><td>Finished normally (exit code <code>0:0</code>)</td></tr>
+    <tr><td><code>FAILED</code></td><td>The program stopped with an error. Read the <code>.err</code> file</td></tr>
+    <tr><td><code>TIMEOUT</code></td><td>It ran past its <code>--time</code> limit</td></tr>
+    <tr><td><code>OUT_OF_MEMORY</code></td><td>It needed more than its <code>--mem</code> limit (<code>sacct</code> may show it as <code>OUT_OF_ME+</code>)</td></tr>
+    <tr><td><code>CANCELLED</code></td><td>Someone (maybe you) cancelled it (shown as <code>CANCELLED+</code> or <code>CANCELLED by ...</code>)</td></tr>
+  </table>
+
+  <div class="box"><span class="label">Waiting a long time?</span>
+    Look at the last column of <code>squeue --me</code>: <code>Priority</code> or <code>Resources</code> just means the cluster is busy. If you have waited more than about 10 minutes,
+    cancel and try the <code>debug</code> partition (command-line options override the script):
+    <pre class="copy"><code>scancel &lt;jobid&gt;
+sbatch --partition=debug run_bigrams.slurm</code></pre></div>
+
+  <div class="box check"><span class="label">✓ Checkpoint</span><code>sacct</code> shows <code>COMPLETED</code> with exit code <code>0:0</code>.</div>
+</section>
+
+<!-- ============================ Step 7 ============================ -->
+<section class="step" id="step-7" data-step="7">
+  <header><span class="num">7</span><h2>Read your results</h2><span class="time">3 min</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <p>Your results are in your scratch folder:</p>
+  <pre class="copy"><code>ls /N/scratch/$USER</code></pre>
+  <p>Read the log (use your job number):</p>
+  <pre class="copy"><code>cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.out</code></pre>
+  <p>Look at the top of the saved table, and check that the error file is empty:</p>
+  <pre class="copy"><code>head -20 /N/scratch/$USER/bigram_counts.tsv
+cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.err</code></pre>
+
+  <div class="box check"><span class="label">✓ Checkpoint: your numbers should match</span>
+<pre class="out"><code>Documents (lines):   3,999
+Total bigrams:       19,500,939
+Distinct bigrams:    5,306,726
+Most frequent:       "of the"  (177,785 times)
+Runtime:             about 20 to 60 seconds (it varies)</code></pre>
+    The layout, the commas and the wording depend on the program pi wrote, but <b>the numbers should be the same</b>.</div>
+
+  <details><summary>What if my numbers are different?</summary>
+    <table class="t">
+      <tr><th>What you see</th><th>Likely cause</th></tr>
+      <tr><td>Total near <b>19,504,898</b> (about 4,000 too high)</td><td>The program counted pairs across the line boundaries. Each line is a separate document, so pairs must stay <b>within a line</b>. Ask pi to fix <code>bigrams_serial.py</code> and run again.</td></tr>
+      <tr><td>Fewer than 3,999 documents</td><td>It didn't read all the files. Check <code>CORPUS_DIR</code> and that all 40 files are there.</td></tr>
+      <tr><td>Documents or total is 0, or "no .txt files found"</td><td>Wrong <code>CORPUS_DIR</code>. Check it with <code>ls</code>.</td></tr>
+    </table></details>
+</section>
+
+<!-- ============================ Step 8 ============================ -->
+<section class="step" id="step-8" data-step="8">
+  <header><span class="num">8</span><h2>Reflect and go further</h2><span class="time">optional</span>
+    <label class="done"><input type="checkbox"> Done</label></header>
+
+  <h3>What you just did</h3>
+  <p>You wrote a request for resources (a batch script), checked it, handed it to a scheduler, and collected the results. The same pattern scales up to much bigger jobs: only the numbers in the <code>#SBATCH</code> lines change.</p>
+
+  <h3>Questions to think about</h3>
+  <ul>
+    <li>Look at the 20 most frequent bigrams. What kinds of words do they contain? What would you want to filter out to find more interesting phrases?</li>
+    <li>The program splits words on spaces, so <code>end.</code> and <code>end</code> count as different words. How would that change your results, and how would you fix it?</li>
+    <li>What would change if the corpus were poetry, or a set of legal documents?</li>
+  </ul>
+
+  <h3>Try something else (each one is optional)</h3>
+  <ul>
+    <li><b>Break it on purpose.</b> Run the job with far too little memory (a command-line option overrides the script):
+      <pre class="copy"><code>sbatch --mem=50M run_bigrams.slurm</code></pre>
+      It fails within seconds. Check <code>sacct</code> (the state is <code>OUT_OF_ME+</code>, with exit code <code>0:125</code>) and read the <code>.err</code> file in
+      <code>/N/scratch/$USER</code>: it says the program was <code>Killed</code> by an <code>oom_kill</code> event. That is how a memory limit shows up, and it is the message to look for when a job dies early.</li>
+    <li><b>Count trigrams</b> (three-word sequences). Start pi in <code>~/bigrams</code> and ask it to write a new program and batch script. Remember to read the new script before you submit it.</li>
+    <li><b>Ask pi for a parallel version</b> that uses several CPU cores, and compare the runtimes. More cores are not always proportionally faster. Why might that be?</li>
+    <li><b>Open the results table</b> (<code>/N/scratch/$USER/bigram_counts.tsv</code>) in a spreadsheet.</li>
+  </ul>
+</section>
+
+<!-- ============================ Cheat sheet ============================ -->
+<section class="step anchor" id="cheat">
+  <header><span class="num" style="background:var(--ink)">&#9889;</span><h2>Cheat sheet</h2></header>
+
+  <h3>pi: stopping and leaving</h3>
+  <table class="t">
+    <tr><th>Do this</th><th>To</th></tr>
+    <tr><td><kbd>Esc</kbd></td><td><b>Interrupt</b> pi while it is working</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Clear what you typed in pi's input box (this does <b>not</b> exit pi)</td></tr>
+    <tr><td><code>/model</code> then <kbd>Enter</kbd></td><td>Choose which model pi uses (pick <b>Gemma</b> for this exercise)</td></tr>
+    <tr><td><code>/new</code> then <kbd>Enter</kbd></td><td>Start a fresh conversation. <b>This also resets the model to pi's default</b>, so run <code>/model</code> and pick Gemma again</td></tr>
+    <tr><td><code>/quit</code> or <code>/exit</code> then <kbd>Enter</kbd></td><td><b>Leave</b> pi cleanly</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Leave pi, when the input box is empty</td></tr>
+  </table>
+  <p class="small">These are pi's default keys and can differ between pi versions.</p>
+
+  <h3>The terminal</h3>
+  <table class="t">
+    <tr><th>Do this</th><th>To</th></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Stop a command that is running, such as <code>watch</code></td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></td><td>Paste into the terminal (plain <kbd>Ctrl</kbd>+<kbd>V</kbd> doesn't work there). In the web version of the Research Desktop, use the <a href="#copypaste">left-hand drawer</a></td></tr>
+    <tr><td><code>cd ~/bigrams</code></td><td>Go to your working folder</td></tr>
+    <tr><td><code>clear</code></td><td>Clear the screen</td></tr>
+  </table>
+
+  <h3>Jobs</h3>
+  <table class="t">
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>sbatch --test-only script</code></td><td>Dry run: check a script without submitting</td></tr>
+    <tr><td><code>sbatch script</code></td><td>Submit a job (prints the job number)</td></tr>
+    <tr><td><code>squeue --me</code></td><td>List your waiting and running jobs</td></tr>
+    <tr><td><code>watch -n 5 squeue --me</code></td><td>The same, refreshed every 5 seconds (<kbd>Ctrl</kbd>+<kbd>C</kbd> to stop)</td></tr>
+    <tr><td><code>sacct -j &lt;jobid&gt; --format=JobID,State,Elapsed,ExitCode</code></td><td>How a job ended</td></tr>
+    <tr><td><code>scancel &lt;jobid&gt;</code></td><td>Cancel one job</td></tr>
+    <tr><td><code>scancel -u $USER</code></td><td>Cancel <b>all</b> your jobs (use with care)</td></tr>
+    <tr><td><code>ls /N/scratch/$USER</code></td><td>See your output files</td></tr>
+  </table>
+</section>
+
+<!-- ============================ Help ============================ -->
+<section class="step anchor" id="help">
+  <header><span class="num" style="background:var(--ink)">?</span><h2>Get help</h2></header>
+
+  <p>Nobody is watching over your shoulder, so here is how to get unstuck.</p>
+
+  <h3>Common problems</h3>
+  <table class="t">
+    <tr><th>What you see</th><th>What to do</th></tr>
+    <tr><td>pi doesn't start or doesn't answer</td><td>Usually the API key or network setup. <a href="mailto:cc155@iu.edu">Email me</a>.</td></tr>
+    <tr><td>pi says it can't find <code>prompt.txt</code></td><td>Start pi from the working folder (<code>cd ~/bigrams</code>, then <code>pi</code>), and check that <code>ls ~/bigrams</code> lists <code>prompt.txt</code>.</td></tr>
+    <tr><td>The step 2 check prints lines</td><td>Placeholders are still in <code>prompt.txt</code>. Replace them, including the angle brackets.</td></tr>
+    <tr><td>pi ran <code>sbatch</code> or the program itself</td><td>Press <kbd>Esc</kbd>, <code>/quit</code>, <code>squeue --me</code>, <code>scancel &lt;jobid&gt;</code>, then start step 3 again. Check that the Gemma model is selected (<code>/model</code>): it resets to the default on a restart or <code>/new</code>.</td></tr>
+    <tr><td><code>Invalid account or account/partition combination</code></td><td>Fix the <code>--account</code> or <code>--partition</code> line, then dry-run again.</td></tr>
+    <tr><td>The job waits a long time (<code>PD</code>)</td><td>The cluster is busy. See "Waiting a long time?" in step 6.</td></tr>
+    <tr><td><code>python: command not found</code></td><td>The script is missing a <code>module load python/...</code> line. Ask pi to add it.</td></tr>
+    <tr><td><code>module load</code> says a module doesn't exist</td><td>Run <code>module spider python</code> and choose a version that is listed. Ask pi to fix the line.</td></tr>
+    <tr><td>"no .txt files found", or 0 documents</td><td>Wrong <code>CORPUS_DIR</code>. Check it with <code>ls</code>, or use the download below.</td></tr>
+    <tr><td><code>FAILED</code>, <code>TIMEOUT</code> or <code>OUT_OF_MEMORY</code></td><td>Read the <code>.err</code> file in <code>/N/scratch/$USER</code>, then ask pi to fix the script.</td></tr>
+  </table>
+
+  <h3>Email me</h3>
+  <p>Write to <a href="mailto:cc155@iu.edu">cc155@iu.edu</a>. Say which step you are on and what you expected, and paste the error message. Then run this one command, which collects what I need into a single file, and paste or attach <code>~/help_info.txt</code>:</p>
+  <pre class="copy"><code>{ echo "== when"; date; echo; echo "== my jobs now"; squeue --me; echo; echo "== recent jobs"; sacct -X --starttime=today --format=JobID,JobName,Partition,Account,State,Elapsed,ExitCode; echo; echo "== batch script"; cat ~/bigrams/run_bigrams.slurm; echo; echo "== newest error file"; cat "$(ls -t /N/scratch/$USER/bigrams_*.err 2&gt;/dev/null | head -1)" 2&gt;&amp;1; echo; echo "== newest output file"; cat "$(ls -t /N/scratch/$USER/bigrams_*.out 2&gt;/dev/null | head -1)" 2&gt;&amp;1; } &gt; ~/help_info.txt 2&gt;&amp;1; echo "Saved ~/help_info.txt"</code></pre>
+  <p class="small">It contains your job list, batch script and log files, and never your API key.</p>
+
+  <h3>Plan B: use a known-good script</h3>
+  <p>If pi's script still doesn't work after a couple of tries, use this tested pair and carry on from step 5 (it is set up for the workshop allocation and the general partition; edit the account or partition lines if yours differ):</p>
+  <pre class="copy"><code>mkdir -p ~/bigrams_planb &amp;&amp; cd ~/bigrams_planb
+wget -O bigrams_serial.py https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/reference/bigrams_serial.py
+wget -O run_bigrams.slurm https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/reference/planb_run_bigrams.slurm</code></pre>
+
+  <h3>If you can't read the corpus folder</h3>
+  <p>Permission denied, folder not found, or very slow? Download your own copy, then use the path it prints as the corpus folder (in the prompt, or in the script's <code>CORPUS_DIR</code> line):</p>
+  <pre class="copy"><code>mkdir -p ~/ling_corpus &amp;&amp; cd ~/ling_corpus
 wget https://github.com/chunlchan/ling-hpc-workshop/releases/download/2026-10-12_01/prepared_4k_concat.zip
 unzip prepared_4k_concat.zip
 ls prepared_4k_concat | wc -l
 echo $PWD/prepared_4k_concat</code></pre>
-    <ul class="small" style="font-size:.8em">
-      <li>The <code>wc -l</code> line should print <b>40</b>.</li>
-      <li>The last line prints the path to use. Put it in place of <code>&lt;PATH&gt;</code>, then start again in a new empty folder.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Stuck?</h2>
-    <ul>
-      <li><b>Job stays on <code>PD</code> a long time:</b> the cluster is busy. Ask about the <code>debug</code> partition.</li>
-      <li><b><code>Found 0 documents</code> or "no .txt files found":</b> the corpus path is wrong. Check it with <code>ls</code>.</li>
-      <li><b><code>python: command not found</code>:</b> the batch script needs a <code>module load python/...</code> line. Ask pi to fix it.</li>
-      <li><b>Anything else:</b> read the <code>.err</code> file in <code>/N/scratch/$USER</code>, or ask an instructor.</li>
-    </ul>
-  </section>
+  <p class="small">The <code>wc -l</code> line should print 40. The last line prints the path to use.</p>
 </section>
+</main>
 
-</div>
-</div>
+<footer>
+  This page: <a href="https://go.iu.edu/ling-hpc-workshop">go.iu.edu/ling-hpc-workshop</a>
+  &middot; <a href="https://github.com/chunlchan/ling-hpc-workshop">source on GitHub</a>
+  &middot; questions: <a href="mailto:cc155@iu.edu">cc155@iu.edu</a>
+</footer>
 
-<div class="footer"><a href="https://go.iu.edu/ling-hpc-workshop">go.iu.edu/ling-hpc-workshop</a><span class="alt">or chunlchan.github.io/ling-hpc-workshop</span></div>
-
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script>
-  Reveal.initialize({
-    hash: true,
-    width: 1280,
-    height: 720,
-    margin: 0.04,
-    center: false,
-    controls: true,
-    progress: true,
-    slideNumber: 'c/t',
-    transition: 'none'
-  });
-
-  // Copy to clipboard, with a fallback for browsers that block the async API
+  // Copy to the clipboard, with a fallback for browsers that block the async API
   function copyText(text) {
     if (navigator.clipboard && window.isSecureContext) {
       return navigator.clipboard.writeText(text);
@@ -323,10 +629,10 @@ echo $PWD/prepared_4k_concat</code></pre>
     });
   }
 
-  function flash(el, doneText, failText, ok) {
+  function flash(el, okText, failText, ok) {
     var original = el.textContent;
     el.classList.toggle('done', ok);
-    if (el.classList.contains('copybtn')) { el.textContent = ok ? doneText : failText; }
+    if (el.classList.contains('copybtn')) { el.textContent = ok ? okText : failText; }
     setTimeout(function () {
       el.classList.remove('done');
       if (el.classList.contains('copybtn')) { el.textContent = original; }
@@ -337,6 +643,7 @@ echo $PWD/prepared_4k_concat</code></pre>
   document.querySelectorAll('pre.copy').forEach(function (pre) {
     var btn = document.createElement('button');
     btn.className = 'copybtn';
+    btn.type = 'button';
     btn.textContent = 'Copy';
     btn.addEventListener('click', function () {
       var text = pre.querySelector('code').innerText.replace(/\n+$/, '');
@@ -350,13 +657,38 @@ echo $PWD/prepared_4k_concat</code></pre>
 
   // Click-to-copy value chips
   document.querySelectorAll('button.chip').forEach(function (chip) {
+    chip.type = 'button';
     chip.addEventListener('click', function () {
       copyText(chip.getAttribute('data-copy')).then(
         function () { flash(chip, '', '', true); },
-        function () { /* leave as is; the value is visible and can be typed */ }
+        function () { /* the value is visible and can be selected by hand */ }
       );
     });
   });
+
+  // "Done" checkboxes: remembered in this browser if possible, and shown as progress in the top bar
+  (function () {
+    var KEY = 'lingHpcWorkshopDone';
+    var boxes = document.querySelectorAll('.step[data-step] .done input');
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { saved = {}; }
+
+    function update() {
+      var n = 0;
+      boxes.forEach(function (b) { if (b.checked) n++; });
+      document.getElementById('prog').textContent = n + ' of ' + boxes.length + ' steps done';
+    }
+    boxes.forEach(function (box) {
+      var step = box.closest('.step').getAttribute('data-step');
+      box.checked = !!saved[step];
+      box.addEventListener('change', function () {
+        saved[step] = box.checked;
+        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* not available: fine */ }
+        update();
+      });
+    });
+    update();
+  })();
 </script>
 </body>
 </html>

@@ -3,7 +3,8 @@
 **How to use this:** save this file as `prompt.txt`. Replace the three values in the "My settings"
 section (replace each `<...>` **including the angle brackets**). Then **delete this header**:
 everything above the `---` line below, and the line itself. Give the rest to your agent on the
-cluster. (If you aren't sure about the account, ask an instructor.)
+cluster. (Not sure about a value? See the walkthrough at https://go.iu.edu/ling-hpc-workshop,
+or email cc155@iu.edu.)
 
 ---
 
@@ -30,9 +31,9 @@ This is a teaching workshop, and the point is that **I submit the job myself**. 
 
 ## My settings
 
-- Corpus folder: `<PATH>`   (your instructor will give you this path)
+- Corpus folder: `<PATH>`   (from the walkthrough)
 - SLURM partition: `<PARTITION>`   (`general` or `debug`)
-- SLURM account: `<ACCOUNT>`   (your instructor will give you this)
+- SLURM account: `<ACCOUNT>`   (from the walkthrough)
 
 ## The data
 

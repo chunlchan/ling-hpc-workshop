@@ -3,6 +3,27 @@
 Two parts: an **answer sheet** (what a correct run looks like) and a **troubleshooting sheet**
 (what goes wrong and how to fix it). Both come from our own test runs on Quartz.
 
+## How the activity runs now: a take-home walkthrough
+
+Students work **on their own**, from the walkthrough page at <https://go.iu.edu/ling-hpc-workshop>
+(`docs/index.html`), with no live instructor. Support is by email (cc155@iu.edu). The page is built
+for that:
+
+- Every step ends with a **checkpoint** ("you should see..."), so students can tell whether they are on track.
+- Step 4 makes students **read the batch script pi wrote before submitting**, with a line-by-line
+  explanation, a checklist and three self-check questions. Step 5 adds a **dry run**
+  (`sbatch --test-only`), which catches a wrong account or partition without creating a job.
+- Step 6 teaches `watch -n 5 squeue --me` and `sacct` for monitoring. An optional `sbatch --mail-type`
+  command gives an email when the job ends.
+- Students are told to run `/model` in pi and **select the Gemma model** (pi's default is Qwen), in step 0 and again in step 3, because pi does not remember the choice: it snaps back to the default (Qwen) on every restart and even after `/new`. In step 3 they then send pi a one-line message telling it to **read `prompt.txt` itself**, so nobody has to copy the prompt out of the file or open a second terminal.
+  Gemma is recommended because it seems to follow the prompt's rules more reliably. If a student's pi misbehaves, the first thing to ask is which model is selected.
+- A **cheat sheet** covers stopping and leaving pi, and cancelling jobs.
+- **Get help** has a symptom table, a command that collects a student's job list, batch script and log
+  files into `~/help_info.txt` to attach to an email, a **Plan B** (a known-good script pair, from
+  `reference/`), and the corpus download fallback.
+
+When a student emails, ask for `~/help_info.txt`: it usually contains everything needed to diagnose the problem.
+
 ---
 
 # Part 1: Answer sheet
@@ -62,8 +83,7 @@ numbers and not the layout. The `.tsv` results file has `word1<TAB>word2<TAB>cou
 
 ## Expected runtime
 
-- The counting itself takes **about 30 seconds** (29.0 s and 30.4 s in two runs of the same job
-  on Quartz). The whole job takes about 15–20 seconds longer than the number the program prints.
+- The counting itself takes **roughly 20 to 35 seconds** in our runs (18.7 s, 29.0 s, 30.4 s, 32.6 s and 32.7 s, with different scripts and on different days). The whole job takes about 15–20 seconds longer than the number the program prints.
 - **Some variation is normal** on a shared cluster, so don't worry if two students see somewhat
   different times.
 - **Why 40 large files?** Reading thousands of small files from a Lustre filesystem is slow and
