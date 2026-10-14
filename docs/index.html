@@ -441,7 +441,7 @@ sbatch --test-only run_bigrams.slurm</code></pre>
     <li>Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop watching. (Without <code>watch</code>, <code>squeue --me -i 5</code> does the same.)</li>
   </ul>
 
-  <p>A run takes anywhere from about 20 seconds to a minute once it starts. The wait before it starts depends on how busy the cluster is, from seconds to several minutes.</p>
+  <p>A run takes anywhere from about 15 seconds to a minute once it starts. The wait before it starts depends on how busy the cluster is, from seconds to several minutes.</p>
 
   <h3>Confirm how it ended</h3>
   <p>The job vanishing from <code>squeue</code> doesn't tell you whether it worked. Ask the scheduler (use your job number):</p>
@@ -475,7 +475,7 @@ sbatch --partition=debug run_bigrams.slurm</code></pre></div>
   <pre class="copy"><code>ls /N/scratch/$USER</code></pre>
   <p>Read the log (use your job number):</p>
   <pre class="copy"><code>cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.out</code></pre>
-  <p>Look at the top of the saved table, and check that the error file is empty:</p>
+  <p>Look at the top of the saved table, and check that the error file is empty. (If you used Plan B, the table is called <code>bigram_counts_serial.tsv</code>.)</p>
   <pre class="copy"><code>head -20 /N/scratch/$USER/bigram_counts.tsv
 cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.err</code></pre>
 
@@ -484,7 +484,7 @@ cat /N/scratch/$USER/bigrams_&lt;jobid&gt;.err</code></pre>
 Total bigrams:       19,500,939
 Distinct bigrams:    5,306,726
 Most frequent:       "of the"  (177,785 times)
-Runtime:             about 20 to 60 seconds (it varies)</code></pre>
+Runtime:             about 15 to 60 seconds (it varies)</code></pre>
     The layout, the commas and the wording depend on the program pi wrote, but <b>the numbers should be the same</b>.</div>
 
   <details><summary>What if my numbers are different?</summary>
@@ -593,6 +593,7 @@ Runtime:             about 20 to 60 seconds (it varies)</code></pre>
   <pre class="copy"><code>mkdir -p ~/bigrams_planb &amp;&amp; cd ~/bigrams_planb
 wget -O bigrams_serial.py https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/reference/bigrams_serial.py
 wget -O run_bigrams.slurm https://raw.githubusercontent.com/chunlchan/ling-hpc-workshop/main/reference/planb_run_bigrams.slurm</code></pre>
+  <p class="small">With Plan B, the results table is saved as <code>bigram_counts_serial.tsv</code> (not <code>bigram_counts.tsv</code>), and the log lines read "Documents (lines)" and "Finished in".</p>
 
   <h3>If you can't read the corpus folder</h3>
   <p>Permission denied, folder not found, or very slow? Download your own copy, then use the path it prints as the corpus folder (in the prompt, or in the script's <code>CORPUS_DIR</code> line):</p>

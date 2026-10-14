@@ -83,7 +83,7 @@ numbers and not the layout. The `.tsv` results file has `word1<TAB>word2<TAB>cou
 
 ## Expected runtime
 
-- The counting itself takes **roughly 20 to 35 seconds** in our runs (18.7 s, 29.0 s, 30.4 s, 32.6 s and 32.7 s, with different scripts and on different days). The whole job takes about 15–20 seconds longer than the number the program prints.
+- The counting itself takes **roughly 15 to 35 seconds** in our runs (16.1 s, 18.7 s, 29.0 s, 30.4 s, 32.6 s and 32.7 s, with different scripts and on different days). The whole job takes about 15–20 seconds longer than the number the program prints.
 - **Some variation is normal** on a shared cluster, so don't worry if two students see somewhat
   different times.
 - **Why 40 large files?** Reading thousands of small files from a Lustre filesystem is slow and
